@@ -82,6 +82,7 @@
 #include "libc_ctype.h"
 #include "libc_glob.h"
 #include "libc_select.h"
+#include "libc_fortify.h"
 
 // need to undef all read / read64 stuffs!
 #undef pread
@@ -2374,16 +2375,10 @@ EXPORT int32_t my32___cxa_thread_atexit_impl(x64emu_t* emu, void* dtor, void* ob
     return 0;
 }
 #ifndef ANDROID
-extern void __chk_fail();
 EXPORT unsigned long int my32___fdelt_chk (unsigned long int d)
 {
-  if (d >= FD_SETSIZE) {
-#ifdef HAVE___CHK_FAIL
-    __chk_fail ();
-#else
-    abort ();
-#endif
-  }
+  if (d >= FD_SETSIZE)
+    fortify_fail("bit out of range 0 - FD_SETSIZE on fd_set");
 
   return d / __NFDBITS;
 }
