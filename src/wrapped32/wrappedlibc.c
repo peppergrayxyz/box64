@@ -81,7 +81,6 @@
 #include "libc_malloc.h"
 #include "libc_ctype.h"
 #include "libc_glob.h"
-#include "libc_select.h"
 #include "libc_fortify.h"
 
 // need to undef all read / read64 stuffs!
@@ -2380,7 +2379,7 @@ EXPORT unsigned long int my32___fdelt_chk (unsigned long int d)
   if (d >= FD_SETSIZE)
     fortify_fail("bit out of range 0 - FD_SETSIZE on fd_set");
 
-  return d / __NFDBITS;
+  return d / 32;  // i386 fd_set is made of 32-bit longs, not the host's __NFDBITS
 }
 #endif
 
