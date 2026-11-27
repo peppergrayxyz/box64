@@ -83,6 +83,9 @@ void leave_critical_section();
 void block_handler_mask(int x64sig);
 int defer_signal(x64emu_t* emu, int signum, siginfo_t* info);
 void cancel_deferred_signal_processing(x64emu_t* emu);
+#ifdef DYNAREC
+int native_at_syscall(void* pc);
+#endif
 
 /* What my_sigactionhandler_oldcode_64 reports to my_sigactionhandler_oldcode() about the
  * interrupted state, so that the latter knows whether it may still restore the register snapshot

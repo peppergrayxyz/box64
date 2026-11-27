@@ -379,7 +379,7 @@ void leave_critical_section()
 
 #ifdef DYNAREC
 // the native pc is on a syscall instruction: the syscall is about to run, or the kernel restarts it
-static int native_at_syscall(void* pc)
+int native_at_syscall(void* pc)
 {
     #if defined(ARM64)
     return *(uint32_t*)pc == 0xd4000001;    // svc #0

@@ -319,7 +319,16 @@ static int clone32_fn_thread(void* arg)
 #endif
 
 
+static void x86Syscall_run(x64emu_t *emu);
 void EXPORT x86Syscall(x64emu_t *emu)
+{
+    uintptr_t old_ret = emu->syscall_ret;
+    emu->syscall_ret = R_RIP;
+    x86Syscall_run(emu);
+    emu->syscall_ret = old_ret;
+}
+
+static void x86Syscall_run(x64emu_t *emu)
 {
     uint32_t s = R_EAX;
     printf_log(LOG_DEBUG, "%04d|%p: Calling 32bits syscall 0x%02X (%d) %p %p %p %p %p", GetTID(), (void*)R_RIP, s, s, (void*)(uintptr_t)R_EBX, (void*)(uintptr_t)R_ECX, (void*)(uintptr_t)R_EDX, (void*)(uintptr_t)R_ESI, (void*)(uintptr_t)R_EDI); 

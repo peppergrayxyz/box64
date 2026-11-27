@@ -702,6 +702,15 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
     if(sig==3)
         SerializeAllMapping();  // Signal Interupt: it's a good time to serialize the mappings if needed
     #endif
+    // like the kernel, a syscall that is restarted is reported at its instruction
+    uintptr_t syscall_ret = emu->syscall_ret;
+    int at_syscall = 0;
+    #ifdef DYNAREC
+    if(!db && pc && syscall_ret && sigcontext->uc_mcontext.gregs[I386_EIP]==syscall_ret && native_at_syscall(pc)) {
+        sigcontext->uc_mcontext.gregs[I386_EIP] = syscall_ret-2;
+        at_syscall = 1;
+    }
+    #endif
     // call the signal handler
     i386_ucontext_t sigcontext_copy = *sigcontext;
     // save old value from emu
@@ -727,7 +736,11 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
     #endif
     int in_fatal = (sig==X64_SIGSEGV) || (sig==X64_SIGBUS) || (sig==X64_SIGILL) || (sig==X64_SIGFPE);
     if(in_fatal) ++box64_in_fatal_handler;
+    emu->syscall_ret = 0;
     ret = RunFunctionHandler32(&exits, dynarec, sigcontext, my_context->signals[info2->si_signo], 3, info2->si_signo, info2, sigcontext);
+    emu->syscall_ret = syscall_ret;
+    if(at_syscall && sigcontext->uc_mcontext.gregs[I386_EIP]==syscall_ret-2)
+        sigcontext->uc_mcontext.gregs[I386_EIP] = sigcontext_copy.uc_mcontext.gregs[I386_EIP] = syscall_ret;
     if(in_fatal && !exits && !emu->quit) --box64_in_fatal_handler;
     // restore old value from emu
     if(used_stack)  // release stack
@@ -786,6 +799,7 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
             dynablock_leave_runtime((dynablock_t*)cur_db);
             #endif
             cancel_deferred_signal_processing(emu);
+            emu->syscall_ret = 0;
             // raw: glibc's sigprocmask does not block its internal signals
             syscall(__NR_rt_sigprocmask, SIG_SETMASK, &sigcontext->uc_sigmask, NULL, 8);
             #ifdef ANDROID
