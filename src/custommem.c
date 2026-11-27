@@ -1773,10 +1773,13 @@ uintptr_t AllocDynarecMap(uintptr_t x64_addr, size_t size, int is_new)
     }
     // need to add a new
     if(list->size == list->cap) {
+        blocklist_t** chunks = box_realloc(list->chunks, (list->cap+4)*sizeof(blocklist_t**));
+        if(!chunks)
+            return 0;
+        list->chunks = chunks;
         list->cap+=4;
-        list->chunks = box_realloc(list->chunks, list->cap*sizeof(blocklist_t**));
     }
-    int i = list->size++;
+    int i = list->size;
     size_t need_sz = sz + sizeof(blocklist_t);
     // alloc a new block, aversized or not, we are at the end of the list
     size_t allocsize = (need_sz>(i?DYNMMAPSZ:DYNMMAPSZ0))?need_sz:(i?DYNMMAPSZ:DYNMMAPSZ0);
@@ -1820,6 +1823,7 @@ uintptr_t AllocDynarecMap(uintptr_t x64_addr, size_t size, int is_new)
 #endif
     setProtection_box((uintptr_t)p, allocsize, PROT_READ | PROT_WRITE | PROT_EXEC);
     list->chunks[i] = p;
+    list->size++;
     rb_set_64(rbt_dynmem, (uintptr_t)p, (uintptr_t)p+allocsize, (uintptr_t)list->chunks[i]);
     p = p + sizeof(blocklist_t);    // adjust pointer and size, to exclude blocklist_t itself
     allocsize-=sizeof(blocklist_t);
