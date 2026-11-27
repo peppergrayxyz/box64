@@ -75,7 +75,7 @@ GOWM(backtrace, iFEpi)
 GOWM(backtrace_symbols, pFEpi)
 //GO(__backtrace_symbols_fd, 
 GOWM(backtrace_symbols_fd, vFEpii)
-GOW(basename, pFp)
+GOWM(basename, pFp)
 GO(bcmp, iFppL)
 GO(bcopy, vFppL)
 //GO(bdflush, 
@@ -2726,7 +2726,7 @@ GO(xdr_void, iFv)
 GOM(__xmknod, iFEipup)
 GOM(__xmknodat, iFEiipup)
 #endif
-GO(__xpg_basename, pFp)
+GOM(__xpg_basename, pFp)
 GOW(__xpg_sigpause, iFi)
 GO(__xpg_strerror_r, pFipL)
 //GOM(xprt_register, vFp)

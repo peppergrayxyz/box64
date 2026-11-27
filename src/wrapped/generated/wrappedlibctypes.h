@@ -221,6 +221,8 @@ typedef double (*DFD_t)(double);
 	GO(__deregister_frame_info, pFp_t) \
 	GO(__secure_getenv, pFp_t) \
 	GO(__strdup, pFp_t) \
+	GO(__xpg_basename, pFp_t) \
+	GO(basename, pFp_t) \
 	GO(canonicalize_file_name, pFp_t) \
 	GO(fts64_read, pFp_t) \
 	GO(fts_read, pFp_t) \

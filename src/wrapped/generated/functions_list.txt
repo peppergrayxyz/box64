@@ -5665,6 +5665,8 @@ wrappedlibc:
   - __deregister_frame_info
   - __secure_getenv
   - __strdup
+  - __xpg_basename
+  - basename
   - canonicalize_file_name
   - fts64_read
   - fts_read

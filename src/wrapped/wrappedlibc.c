@@ -291,6 +291,30 @@ static char* guest_copy_string(const char* s)
     return p;
 }
 
+#ifdef __GLIBC__
+char* __xpg_basename(char* path);
+#define posix_basename __xpg_basename
+#else
+#include <libgen.h>
+#define posix_basename basename
+#endif
+// glibc's basename is the GNU one, musl's the POSIX one
+EXPORT char* my_basename(char* path)
+{
+    #ifdef ANDROID
+    return basename(path);
+    #else
+    if(box64_musl)
+        return posix_basename(path);
+    char* p = strrchr(path, '/');
+    return p ? p+1 : path;
+    #endif
+}
+EXPORT char* my___xpg_basename(char* path)
+{
+    return posix_basename(path);
+}
+
 EXPORT char* my_strdup(x64emu_t* emu, const char* s)
 {
     (void)emu;
