@@ -629,4 +629,43 @@ EXPORT ssize_t __recv_chk(int fd, void* buf, size_t len, size_t buflen, int flag
 }
 #endif
 
+#if !defined(HAVE___OPEN_2) || !defined(HAVE___OPEN64_2) || !defined(HAVE___OPENAT_2) || !defined(HAVE___OPENAT64_2)
+static int open_needs_mode(int flags)
+{
+    return (flags & O_CREAT) || (flags & O_TMPFILE) == O_TMPFILE;
+}
+#endif
+
+#ifndef HAVE___OPEN_2
+EXPORT int __open_2(const char* path, int flags)
+{
+    if (open_needs_mode(flags)) fortify_fail("invalid open call: O_CREAT or O_TMPFILE without mode");
+    return open(path, flags);
+}
+#endif
+
+#ifndef HAVE___OPEN64_2
+EXPORT int __open64_2(const char* path, int flags)
+{
+    if (open_needs_mode(flags)) fortify_fail("invalid open64 call: O_CREAT or O_TMPFILE without mode");
+    return open(path, flags);
+}
+#endif
+
+#ifndef HAVE___OPENAT_2
+EXPORT int __openat_2(int fd, const char* path, int flags)
+{
+    if (open_needs_mode(flags)) fortify_fail("invalid openat call: O_CREAT or O_TMPFILE without mode");
+    return openat(fd, path, flags);
+}
+#endif
+
+#ifndef HAVE___OPENAT64_2
+EXPORT int __openat64_2(int fd, const char* path, int flags)
+{
+    if (open_needs_mode(flags)) fortify_fail("invalid openat64 call: O_CREAT or O_TMPFILE without mode");
+    return openat(fd, path, flags);
+}
+#endif
+
 #endif // ANDROID

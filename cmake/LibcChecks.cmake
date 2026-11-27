@@ -91,6 +91,10 @@ set(PROJECT_FORTIFY_CHECKS
     __memmove_chk
     __mempcpy_chk
     __memset_chk
+    __open64_2
+    __open_2
+    __openat64_2
+    __openat_2
     __poll_chk
     __ppoll_chk
     __pread64_chk
