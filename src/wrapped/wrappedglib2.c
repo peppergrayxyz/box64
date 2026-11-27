@@ -1242,13 +1242,19 @@ EXPORT int my_g_ptr_array_find_with_equal_func(x64emu_t* emu, void* haystack, vo
 EXPORT void* my_g_thread_create(x64emu_t* emu, void* func, void* data, int joinable, void* error)
 {
     void* et = NULL;
-    return my->g_thread_create(my_prepare_thread(emu, func, data, 0, &et), et, joinable, error);
+    void* fnc = my_prepare_thread(emu, func, data, 0, &et);
+    if(!fnc)
+        return NULL;
+    return my->g_thread_create(fnc, et, joinable, error);
 }
 
 EXPORT void* my_g_thread_create_full(x64emu_t* emu, void* func, void* data, unsigned long stack, int joinable, int bound, uint32_t priority, void* error)
 {
     void* et = NULL;
-    return my->g_thread_create_full(my_prepare_thread(emu, func, data, stack, &et), et, stack, joinable, bound, priority, error);
+    void* fnc = my_prepare_thread(emu, func, data, stack, &et);
+    if(!fnc)
+        return NULL;
+    return my->g_thread_create_full(fnc, et, stack, joinable, bound, priority, error);
 }
 
 EXPORT void my_g_thread_foreach(x64emu_t* emu, void* func, void* data)

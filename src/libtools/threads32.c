@@ -215,6 +215,10 @@ EXPORT int my32_pthread_create(x64emu_t *emu, void* t, void* attr, void* start_r
     if(!stack) {
         //stack = malloc(stacksize);
         stack = box_mmap(NULL, stacksize, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0);
+        if(stack==MAP_FAILED) {
+            if(my_attr) pthread_attr_destroy(my_attr);
+            return EAGAIN;
+        }
         setProtection_stack((uintptr_t)stack, stacksize, PROT_READ|PROT_WRITE);
         own = 1;
     }
@@ -228,7 +232,16 @@ EXPORT int my32_pthread_create(x64emu_t *emu, void* t, void* attr, void* start_r
     }
 
     emuthread_t *et = (emuthread_t*)box_calloc(1, sizeof(emuthread_t));
-    x64emu_t *emuthread = NewX64Emu(my_context, (uintptr_t)start_routine, (uintptr_t)stack, stacksize, own);
+    x64emu_t *emuthread = et?NewX64Emu(my_context, (uintptr_t)start_routine, (uintptr_t)stack, stacksize, own):NULL;
+    if(!emuthread) {
+        box_free(et);
+        if(own) {
+            box_munmap(stack, stacksize);
+            freeProtection((uintptr_t)stack, stacksize);
+        }
+        if(my_attr) pthread_attr_destroy(my_attr);
+        return EAGAIN;
+    }
     SetupX64Emu(emuthread, emu);
     et->emu = emuthread;
     et->fnc = (uintptr_t)start_routine;
@@ -262,6 +275,11 @@ EXPORT int my32_pthread_create(x64emu_t *emu, void* t, void* attr, void* start_r
     pthread_t pth = 0;
     int ret = pthread_create(&pth, my_attr?my_attr:get_attr(attr), pthread_routine, et);
     if(my_attr) pthread_attr_destroy(my_attr);
+    if(ret) {
+        FreeX64Emu(&emuthread);
+        box_free(et);
+        return ret;
+    }
     if(!ret && t) *(ulong_t*)t = (ulong_t)to_hash((uintptr_t)pth);
     __atomic_store_n(&et->pthread_t_ready, 1, __ATOMIC_RELEASE);
     return ret;
@@ -285,7 +303,12 @@ void* my32_prepare_thread(x64emu_t *emu, void* f, void* arg, int ssize, void** p
     if(stack==MAP_FAILED)
         return NULL;
     emuthread_t *et = (emuthread_t*)box_calloc(1, sizeof(emuthread_t));
-    x64emu_t *emuthread = NewX64Emu(emu->context, (uintptr_t)f, (uintptr_t)stack, stacksize, 1);
+    x64emu_t *emuthread = et?NewX64Emu(emu->context, (uintptr_t)f, (uintptr_t)stack, stacksize, 1):NULL;
+    if(!emuthread) {
+        box_free(et);
+        munmap(stack, stacksize);
+        return NULL;
+    }
     SetupX64Emu(emuthread, emu);
     et->emu = emuthread;
     et->fnc = (uintptr_t)f;

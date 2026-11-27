@@ -902,9 +902,14 @@ static void x64Syscall_linux_run(x64emu_t *emu)
                     int stack_size = 0;
                     uintptr_t sp = R_RSI;
                     x64emu_t * newemu = NewX64Emu(emu->context, R_RIP, (uintptr_t)stack_base, stack_size, (R_RSI)?0:1);
+                    clone_t* args = newemu?box_calloc(1, sizeof(clone_t)):NULL;
+                    if(!args) {
+                        if(newemu) FreeX64Emu(&newemu);
+                        S_RAX = -ENOMEM;
+                        break;
+                    }
                     SetupX64Emu(newemu, emu);
                     CloneEmu(newemu, emu);
-                    clone_t* args = box_calloc(1, sizeof(clone_t));
                     newemu->regs[_SP].q[0] = sp;  // setup new stack pointer
                     args->emu = newemu;
                     if(flags & CLONE_SETTLS) {
@@ -1469,10 +1474,15 @@ long EXPORT my_syscall(x64emu_t *emu)
                     }
                 }
                 x64emu_t * newemu = NewX64Emu(emu->context, R_RIP, (uintptr_t)stack_base, stack_size, (R_RDX)?0:1);
+                clone_t* args = newemu?box_calloc(1, sizeof(clone_t)):NULL;
+                if(!args) {
+                    if(newemu) FreeX64Emu(&newemu);
+                    errno = ENOMEM;
+                    return -1;
+                }
                 SetupX64Emu(newemu, emu);
                 CloneEmu(newemu, emu);
                 newemu->regs[_SP].q[0] = sp;  // setup new stack pointer
-                clone_t* args = box_calloc(1, sizeof(clone_t));
                 args->emu = newemu;
                 if(flags & CLONE_SETTLS) {
                     args->tls = (void*)R_R9;

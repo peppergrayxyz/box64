@@ -440,6 +440,10 @@ static void x86Syscall_run(x64emu_t *emu)
                     #ifdef EMULATE_CLONE_THREAD
                     if(R_EBX & CLONE_THREAD) {
                         x64emu_t * newemu = NewX64Emu(emu->context, R_EIP, (uintptr_t)stack_base, 0, 0);
+                        if(!newemu) {
+                            S_RAX = -ENOMEM;
+                            break;
+                        }
                         SetupX64Emu(newemu, emu);
                         CloneEmu(newemu, emu);
                         newemu->regs[_SP].q[0] = R_ECX;  // setup new stack pointer

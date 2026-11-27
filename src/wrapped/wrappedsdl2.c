@@ -565,6 +565,8 @@ EXPORT void* my2_SDL_CreateThread(x64emu_t* emu, void* f, void* n, void* p)
 {
     void* et = NULL;
     void* fnc = my_prepare_thread(emu, f, p, 0, &et);
+    if(!fnc)
+        return NULL;
     return my->SDL_CreateThread(fnc, n, et);
 }
 

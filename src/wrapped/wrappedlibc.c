@@ -5758,7 +5758,12 @@ EXPORT int my_clone(x64emu_t* emu, void* fn, void* stack, int flags, void* args,
     printf_log(LOG_DEBUG, "my_clone(fn:%p(%s), stack:%p, 0x%x, args:%p, %p, %p, %p)", fn, getAddrFunctionName((uintptr_t)fn), stack, flags, args, parent, tls, child);
     void* mystack = NULL;
     clone_arg_t* arg = (clone_arg_t*)box_calloc(1, sizeof(clone_arg_t));
-    x64emu_t * newemu = NewX64Emu(emu->context, R_RIP, (uintptr_t)stack, 0, 0);
+    x64emu_t * newemu = arg?NewX64Emu(emu->context, R_RIP, (uintptr_t)stack, 0, 0):NULL;
+    if(!newemu) {
+        box_free(arg);
+        errno = ENOMEM;
+        return -1;
+    }
     SetupX64Emu(newemu, emu);
     //CloneEmu(newemu, emu);
     arg->stack = (uintptr_t)stack &~7LL;
