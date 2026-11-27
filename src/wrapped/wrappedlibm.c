@@ -272,13 +272,17 @@ FROUND2(nearbyintl, double, double, nearbyint)
 #endif
 
 #ifdef ANDROID
-double my_pow10(double a) { return pow(10.0, a);}
-float my_pow10f(float a) { return powf(10.0f, a);}
-long double my_pow10l(long double a) { return powl(10.0, a);}
+EXPORT double my_pow10(double a) { return pow(10.0, a);}
+EXPORT float my_pow10f(float a) { return powf(10.0f, a);}
+EXPORT long double my_pow10l(long double a) { return powl(10.0, a);}
 #else
-double my_pow10(double a) { return exp10(a);}
-float my_pow10f(float a) { return exp10f(a);}
-long double my_pow10l(long double a) { return exp10l(a);}
+EXPORT double my_pow10(double a) { return exp10(a);}
+EXPORT float my_pow10f(float a) { return exp10f(a);}
+#ifdef HAVE_LD80BITS
+EXPORT long double my_pow10l(long double a) { return exp10l(a);}
+#else
+EXPORT double my_pow10l(double a) { return exp10(a);}
+#endif
 #endif
 
 #ifdef STATICBUILD
