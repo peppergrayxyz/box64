@@ -1739,6 +1739,7 @@ x64emurun:
                 // 32bits syscall
                 #ifndef TEST_INTERPRETER
                 EmuX86Syscall(emu);
+                if(emu->quit) goto fini;    // sys_exit only sets quit
                 STEP2;
                 #endif
             } else if (tmp8u==0x03) {
