@@ -3138,8 +3138,9 @@ static void init_guest_brk(void)
     void* p = box_mmap(NULL, size, PROT_READ|PROT_WRITE,
                        MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE, -1, 0);
     if(p==MAP_FAILED || !p) {
-        printf_log(LOG_INFO, "Warning: cannot reserve guest brk arena (%s), using host program break\n", strerror(errno));
-        __atomic_store_n(&guest_brk_state, -1, __ATOMIC_RELEASE);
+        printf_log(LOG_INFO, "Warning: cannot reserve guest brk arena (%s), guest brk will fail\n", strerror(errno));
+        guest_brk_base = guest_brk_end = guest_brk_cur = (uintptr_t)sbrk(0);
+        __atomic_store_n(&guest_brk_state, 1, __ATOMIC_RELEASE);
         return;
     }
     guest_brk_base = (uintptr_t)p;
