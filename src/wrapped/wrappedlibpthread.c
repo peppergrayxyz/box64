@@ -62,6 +62,15 @@ EXPORT void my___pthread_initialize()
     // nothing, the lib initialize itself now
 }
 
+EXPORT int my_pthread_join(x64emu_t* emu, pthread_t th, void** ret)
+{
+#ifndef ANDROID
+    // glibc only acts on a pending cancel when the join blocks
+    pthread_testcancel();
+#endif
+    return pthread_join(th, ret);
+}
+
 #ifdef __GLIBC__
 // musl's sem_t is only 4-byte aligned, glibc's uses 64-bit atomics on its first 16 bytes
 #define NATIVE_SEM(s) ((sem_t*)(((uintptr_t)(s)+7)&~(uintptr_t)7))

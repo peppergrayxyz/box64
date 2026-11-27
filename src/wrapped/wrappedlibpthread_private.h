@@ -156,7 +156,7 @@ GO(__pthread_getspecific, pFL)
 GO(pthread_getspecific, pFu)
 GO(pthread_getname_np, iFppL)
 //GO(__pthread_initialize_minimal, 
-GO(pthread_join, iFLp)
+GOM(pthread_join, iFELp)
 GOM(__pthread_key_create, iFEpp)
 GOM(pthread_key_create, iFEpp)
 GOM(pthread_key_delete, iFEu)

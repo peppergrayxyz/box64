@@ -566,6 +566,7 @@
 #() iFEWW
 #() iFEup
 #() iFEUU
+#() iFELp
 #() iFEpi
 #() iFEpW
 #() iFEpu
@@ -6582,6 +6583,8 @@ wrappedlibpthread:
   - __pthread_cleanup_pop
   - _pthread_cleanup_pop
   - _pthread_cleanup_pop_restore
+- iFLp:
+  - pthread_join
 - iFpi:
   - __pthread_mutexattr_settype
   - pthread_attr_setdetachstate
