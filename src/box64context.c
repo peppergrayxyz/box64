@@ -9,6 +9,7 @@
 #include <inttypes.h>
 
 #include "os.h"
+#include "random.h"
 #include "box64context.h"
 #include "debug.h"
 #ifdef DYNAREC
@@ -64,16 +65,10 @@ void finiAllHelpers(box64context_t* context)
     finied = 1;
 }
 
-/// maxval not inclusive
+/// maxval not inclusive. Not random(): the guest shares its state, and expects it untouched
 int getrand(int maxval)
 {
-    if(maxval<1024) {
-        return ((random()&0x7fff)*maxval)/0x7fff;
-    } 
-        uint64_t r = random();
-        r = (r*maxval) / RAND_MAX;
-        return r;
-
+    return ((uint64_t)get_random32() * maxval) >> 32;
 }
 
 void x64Syscall(x64emu_t *emu);
