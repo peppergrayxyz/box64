@@ -754,7 +754,10 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
         exit(ret);
     }
     if(restorer) {
+        int old_in_restorer = emu->in_restorer;
+        emu->in_restorer = 1;
         RunFunctionHandler(emu, &exits, 0, NULL, restorer, 0);
+        emu->in_restorer = old_in_restorer;
         /* A guest-installed restorer (SA_RESTORER) runs *after* the context was written back and
          * clobbers the registers with whatever it likes; keep the old behaviour there. */
         context_applied = 0;

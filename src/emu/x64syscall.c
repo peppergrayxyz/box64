@@ -115,7 +115,7 @@ static const scwrap_t syscallwrap[] = {
     //[11] = {__NR_munmap, 2},    // same
     //[13] = {__NR_rt_sigaction, 4},   // wrapped to use my_ version
     [14] = {__NR_rt_sigprocmask, 4},
-    [15] = {__NR_rt_sigreturn, 1},
+    //[15] = {__NR_rt_sigreturn, 1},   // emulated: the native one would restore a native frame
     #ifndef PPC64LE
     [16] = {__NR_ioctl, 3},
     #endif
@@ -793,6 +793,13 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                 S_RAX = -errno;
             break;
         #endif
+        case 15: // sys_rt_sigreturn
+            // box64 restored the context when the handler returned: end the sa_restorer run
+            if(emu->in_restorer)
+                emu->quit = 1;
+            else
+                S_RAX = -ENOSYS;
+            break;
         case 56: // sys_clone
             // x86_64 raw syscall is long clone(unsigned long flags, void *stack, int *parent_tid, int *child_tid, unsigned long tls);
             // so flags=R_RDI, stack=R_RSI, parent_tid=R_RDX, child_tid=R_R10, tls=R_R8
@@ -1281,6 +1288,13 @@ long EXPORT my_syscall(x64emu_t *emu)
         case 34:
             return pause();
         #endif
+        case 15: // sys_rt_sigreturn
+            if(emu->in_restorer) {
+                emu->quit = 1;
+                return 0;
+            }
+            errno = ENOSYS;
+            return -1;
         case 56: // sys_clone
             // x86_64 raw syscall is long clone(unsigned long flags, void *stack, int *parent_tid, int *child_tid, unsigned long tls);
             // so flags=R_RSI, stack=R_RDX, parent_tid=R_RCX, child_tid=R_R8, tls=R_R9

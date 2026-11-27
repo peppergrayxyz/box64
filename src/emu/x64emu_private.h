@@ -114,6 +114,7 @@ typedef struct x64emu_s {
     int         error;
     int         fork;   // quit because need to fork
     int         exit;
+    int         in_restorer;    // running the guest's sa_restorer
     forkpty_t*  forkpty_info;
     emu_flags_t flags;
     x64test_t   test;       // used for dynarec testing
