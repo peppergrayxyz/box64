@@ -132,6 +132,9 @@ static int round_from_native(int round) {
 static int x86_to_native_excepts(int e) {
     int n = 0;
     if (e & 0x01) n |= FE_INVALID;
+#ifdef FE_DENORMAL
+    if (e & 0x02) n |= FE_DENORMAL;
+#endif
     if (e & 0x04) n |= FE_DIVBYZERO;
     if (e & 0x08) n |= FE_OVERFLOW;
     if (e & 0x10) n |= FE_UNDERFLOW;
@@ -142,6 +145,9 @@ static int x86_to_native_excepts(int e) {
 static int native_to_x86_excepts(int e) {
     int x = 0;
     if (e & FE_INVALID)    x |= 0x01;
+#ifdef FE_DENORMAL
+    if (e & FE_DENORMAL)   x |= 0x02;
+#endif
     if (e & FE_DIVBYZERO)  x |= 0x04;
     if (e & FE_OVERFLOW)   x |= 0x08;
     if (e & FE_UNDERFLOW)  x |= 0x10;
@@ -206,11 +212,9 @@ EXPORT int my_feupdateenv(x64emu_t* emu, const fenv_t* envp)
 // See https://github.com/bminor/glibc/blob/master/sysdeps/x86_64/fpu/fesetround.c
 EXPORT int my_fesetround(x64emu_t* emu, int round)
 {
+    if ((round & ~0xc00) != 0)
+        return 1;
     if (BOX64ENV(sync_rounding)) {
-        if ((round & ~0xc00) != 0)
-            // round is not valid.
-            return 1;
-
         emu->cw.x16 &= ~0xc00;
         emu->cw.x16 |= round;
 
