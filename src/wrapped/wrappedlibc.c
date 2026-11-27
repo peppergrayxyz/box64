@@ -103,6 +103,7 @@ extern const char *const sys_siglist[] __asm__("__sys_siglist");
 #include "libc_malloc.h"
 #include "libc_dirent.h"
 #include "libc_ctype.h"
+#include "threads.h"
 #ifndef LOG_INFO
 #define LOG_INFO 1
 #endif
@@ -5512,12 +5513,16 @@ static int clone_fn(void* p)
     if(arg->flags&CLONE_NEWUSER) {
         init_mutexes(my_context);
     }
-    int ret = RunFunctionWithEmu(emu, 0, arg->fnc, 1, arg->args);
+    // freed before running the guest: it may end the thread with a raw exit
+    uintptr_t fnc = arg->fnc;
+    void* args = arg->args;
+    int stack_clone_used = arg->stack_clone_used;
+    box_free(arg);
+    int ret = RunFunctionWithEmu(emu, 0, fnc, 1, args);
     int exited = (emu->flags.quitonexit==2);
     thread_set_emu(NULL); // emu is gone...
-    if(arg->stack_clone_used)
+    if(stack_clone_used)
         my_context->stack_clone_used = 0;
-    box_free(arg);
     /*if(exited)
         exit(ret);*/
     return ret;
@@ -5531,6 +5536,24 @@ EXPORT int my_clone(x64emu_t* emu, void* fn, void* stack, int flags, void* args,
     x64emu_t * newemu = NewX64Emu(emu->context, R_RIP, (uintptr_t)stack, 0, 0);
     SetupX64Emu(newemu, emu);
     //CloneEmu(newemu, emu);
+    arg->stack = (uintptr_t)stack &~7LL;
+    arg->args = args;
+    arg->fnc = (uintptr_t)fn;
+    arg->tls = tls;
+    arg->emu = newemu;
+    arg->flags = flags;
+    #ifdef EMULATE_CLONE_THREAD
+    if(flags & CLONE_THREAD) {
+        long ret = clone_thread(clone_fn, arg, (unsigned int)flags, parent, child);
+        if(ret < 0) {
+            FreeX64Emu(&newemu);
+            box_free(arg);
+            errno = -ret;
+            return -1;
+        }
+        return ret;
+    }
+    #endif
     if(my_context->stack_clone_used) {
         printf_log(LOG_DEBUG, " no free stack_clone ");
         mystack = box_malloc(1024*1024);  // stack for own process... memory leak, but no practical way to remove it
@@ -5542,12 +5565,6 @@ EXPORT int my_clone(x64emu_t* emu, void* fn, void* stack, int flags, void* args,
         my_context->stack_clone_used = 1;
         arg->stack_clone_used = 1;
     }
-    arg->stack = (uintptr_t)stack &~7LL;
-    arg->args = args;
-    arg->fnc = (uintptr_t)fn;
-    arg->tls = tls;
-    arg->emu = newemu;
-    arg->flags = flags;
     // the emulated callback can use wrapped libc before exec, so it cannot safely
     // share the host allocator and address space with a suspended parent.
     if((flags & (CLONE_VM|CLONE_VFORK)) == (CLONE_VM|CLONE_VFORK)) {

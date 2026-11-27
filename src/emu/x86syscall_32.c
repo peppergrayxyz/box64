@@ -39,6 +39,7 @@
 #include "box32.h"
 #include "converter32.h"
 #include "custommem.h"
+#include "threads.h"
 #include "syscall_user_dispatch.h"
 
 
@@ -306,6 +307,17 @@ static int clone32_fn(void* arg)
     _exit(ret);
 }
 
+#ifdef EMULATE_CLONE_THREAD
+static int clone32_fn_thread(void* arg)
+{
+    x64emu_t *emu = arg;
+    thread_set_emu(emu);
+    R_EAX = 0;
+    DynaRun(emu);
+    return S_EAX;
+}
+#endif
+
 
 void EXPORT x86Syscall(x64emu_t *emu)
 {
@@ -411,6 +423,29 @@ void EXPORT x86Syscall(x64emu_t *emu)
                 if(R_ECX)
                 {
                     void* stack_base = from_ptrv(R_ECX);
+                    #ifdef EMULATE_CLONE_THREAD
+                    if(R_EBX & CLONE_THREAD) {
+                        x64emu_t * newemu = NewX64Emu(emu->context, R_EIP, (uintptr_t)stack_base, 0, 0);
+                        SetupX64Emu(newemu, emu);
+                        CloneEmu(newemu, emu);
+                        newemu->regs[_SP].q[0] = R_ECX;  // setup new stack pointer
+                        // i386 CLONE_SETTLS: tls is a user_desc, applied to the child's emu
+                        if(R_EBX & CLONE_SETTLS) {
+                            if(my_set_thread_area_32(newemu, (thread_area_32_t*)from_ptrv(R_ESI))==(uint32_t)-1) {
+                                S_RAX = -errno;
+                                FreeX64Emu(&newemu);
+                                break;
+                            }
+                            // CloneEmu copied the parent's bases
+                            GetSegmentBaseEmu(newemu, _FS);
+                            GetSegmentBaseEmu(newemu, _GS);
+                        }
+                        S_RAX = clone_thread(clone32_fn_thread, newemu, R_EBX, (int*)from_ptrv(R_EDX), (int*)from_ptrv(R_EDI));
+                        if(S_RAX < 0)
+                            FreeX64Emu(&newemu);
+                        break;
+                    }
+                    #endif
                     uint32_t size = sizeof(clone_t) + 16 + sizeof(x64emu_t) +16;
                     void* mystack = NULL;
                     uint32_t stack_from_context = 1;

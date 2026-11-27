@@ -37,6 +37,13 @@ int checkUnlockMutex(void* m);
 //check if a mutex is locked by current thread (works only for PTHREAD_MUTEX_ERRORCHECK typed mutex)
 int checkNolockMutex(void* m);
 
+#if !defined(ANDROID)
+#define EMULATE_CLONE_THREAD
+long clone_thread(int (*fn)(void*), void* arg, unsigned long flags, int* ptid, int* ctid);
+void clone_thread_exit(int code);
+int clone_thread_set_tid_address(int* tidptr);
+#endif
+
 #ifdef BAD_PKILL
 void add_thread(void* t, emuthread_t* et);
 void del_thread(void* t);

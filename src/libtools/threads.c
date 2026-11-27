@@ -36,6 +36,14 @@
 #include "threads32.h"
 #endif
 #include <stdatomic.h>
+#ifdef EMULATE_CLONE_THREAD
+#include <sched.h>
+#include <signal.h>
+#include <semaphore.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/futex.h>
+#endif
 
 _Atomic int g_active_emu_workers = 0;
 //void _pthread_cleanup_push_defer(void* buffer, void* routine, void* arg);	// declare hidden functions
@@ -233,6 +241,17 @@ void thread_forget_emu()
 {
 	pthread_setspecific(thread_key, NULL);
 }
+#ifdef EMULATE_CLONE_THREAD
+#define SYNC_SIGNALS ((1ULL<<(SIGSEGV-1)) | (1ULL<<(SIGBUS-1)) | (1ULL<<(SIGILL-1)) | (1ULL<<(SIGFPE-1)) | (1ULL<<(SIGTRAP-1)))
+static __thread int      clone_thread_mask_pending;
+static __thread uint64_t clone_thread_mask;
+
+static void set_sigmask(uint64_t mask)
+{
+	syscall(__NR_rt_sigprocmask, SIG_SETMASK, &mask, NULL, sizeof(mask));
+}
+#endif
+
 void thread_set_emu(x64emu_t* emu)
 {
 	emuthread_t *et = (emuthread_t*)pthread_getspecific(thread_key);
@@ -262,7 +281,107 @@ void thread_set_emu(x64emu_t* emu)
 	add_thread((void*)et->self, et);
 	#endif
 	pthread_setspecific(thread_key, et);
+	#ifdef EMULATE_CLONE_THREAD
+	if(clone_thread_mask_pending) {
+		clone_thread_mask_pending = 0;
+		set_sigmask(clone_thread_mask);
+	}
+	#endif
 }
+
+#ifdef EMULATE_CLONE_THREAD
+// a native clone() child would run on the parent's thread pointer, and musl's clone() refuses
+// CLONE_THREAD: the guest thread runs on a native pthread, the clone flags are emulated
+typedef struct clone_thread_s {
+	int		(*fn)(void*);
+	void*	arg;
+	unsigned long flags;
+	int*	ptid;
+	int*	ctid;
+	sem_t	ready;
+	int		tid;
+	uint64_t sigmask;
+} clone_thread_t;
+
+#define CLONE_THREAD_FLAGS (CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD \
+	| CLONE_SYSVSEM | CLONE_IO | CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID \
+	| CLONE_CHILD_CLEARTID | CLONE_DETACHED | CSIGNAL)
+
+static __thread int  clone_thread_self;
+static __thread int* clone_thread_ctid;
+
+void clone_thread_exit(int code)
+{
+	if(!clone_thread_self)
+		return;
+	// once ctid is cleared, the joiner may free this thread's stack and TCB
+	thread_set_emu(NULL);
+	set_sigmask(~SYNC_SIGNALS);
+	if(clone_thread_ctid) {
+		__atomic_store_n(clone_thread_ctid, 0, __ATOMIC_SEQ_CST);
+		syscall(__NR_futex, clone_thread_ctid, FUTEX_WAKE, 1, NULL, NULL, 0);
+	}
+	pthread_exit((void*)(intptr_t)code);
+}
+
+int clone_thread_set_tid_address(int* tidptr)
+{
+	if(!clone_thread_self)
+		return 0;
+	clone_thread_ctid = tidptr;
+	return 1;
+}
+
+static void* clone_thread_start(void* p)
+{
+	clone_thread_t* ct = p;
+	set_sigmask(~SYNC_SIGNALS);	// glibc unblocks its internal signals in a new thread
+	clone_thread_mask = ct->sigmask;
+	clone_thread_mask_pending = 1;
+	int (*fn)(void*) = ct->fn;
+	void* arg = ct->arg;
+	int tid = GetTID();
+	if((ct->flags & CLONE_PARENT_SETTID) && ct->ptid)
+		*ct->ptid = tid;
+	if((ct->flags & CLONE_CHILD_SETTID) && ct->ctid)
+		*ct->ctid = tid;
+	clone_thread_self = 1;
+	clone_thread_ctid = (ct->flags & CLONE_CHILD_CLEARTID) ? ct->ctid : NULL;
+	ct->tid = tid;
+	sem_post(&ct->ready);
+	clone_thread_exit(fn(arg));
+	return NULL;
+}
+
+long clone_thread(int (*fn)(void*), void* arg, unsigned long flags, int* ptid, int* ctid)
+{
+	flags &= 0xffffffff;
+	if(!(flags & CLONE_SIGHAND) || !(flags & CLONE_VM) || (flags & ~CLONE_THREAD_FLAGS))
+		return -EINVAL;
+	clone_thread_t ct = {0};
+	ct.fn = fn;
+	ct.arg = arg;
+	ct.flags = flags;
+	ct.ptid = ptid;
+	ct.ctid = ctid;
+	syscall(__NR_rt_sigprocmask, SIG_SETMASK, NULL, &ct.sigmask, sizeof(ct.sigmask));
+	uint64_t old = ct.sigmask;
+	set_sigmask(~SYNC_SIGNALS);
+	sem_init(&ct.ready, 0, 0);
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_attr_setstacksize(&attr, 1024*1024);
+	pthread_t thread;
+	int err = pthread_create(&thread, &attr, clone_thread_start, &ct);
+	pthread_attr_destroy(&attr);
+	set_sigmask(old);
+	if(!err)
+		while(sem_wait(&ct.ready) && errno==EINTR);
+	sem_destroy(&ct.ready);
+	return err ? -err : ct.tid;
+}
+#endif
 
 int thread_emu_ready(void)
 {

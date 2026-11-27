@@ -44,6 +44,7 @@
 #include "syscall_user_dispatch.h"
 #include "cpumask.h"
 #include "custommem.h"
+#include "threads.h"
 
 typedef struct x64_sigaction_s x64_sigaction_t;
 typedef struct x64_stack_s x64_stack_t;
@@ -169,7 +170,9 @@ static const scwrap_t syscallwrap[] = {
     #endif
     //[58] = {__NR_vfork, 0},
     //[59] = {__NR_execve, 3},
+    #ifndef EMULATE_CLONE_THREAD
     [60] = {__NR_exit, 1},    // Needs wrapping?
+    #endif
     [61] = {__NR_wait4, 4},
     [62] = {__NR_kill, 2 },
     //[63] = {__NR_uname, 1}, // Needs wrapping, use old_utsname
@@ -290,7 +293,9 @@ static const scwrap_t syscallwrap[] = {
     [213] = {__NR_epoll_create, 1},
     #endif
     [217] = {__NR_getdents64, 3},
+    #ifndef EMULATE_CLONE_THREAD
     [218] = {__NR_set_tid_address, 1},
+    #endif
     [220] = {__NR_semtimedop, 4},
     [221] = {__NR_fadvise64, 4},
     [228] = {__NR_clock_gettime, 2},
@@ -539,6 +544,30 @@ static void clone_args_free(clone_t* args)
         my_context->stack_clone_used = 0;
     box_free(args);
 }
+
+#ifdef EMULATE_CLONE_THREAD
+static int clone_fn_thread(void* arg)
+{
+    clone_t* args = arg;
+    x64emu_t *emu = args->emu;
+    if(args->set_tls) SetFSBaseEmu(emu, args->tls);
+    box_free(args);
+    thread_set_emu(emu);
+    R_RAX = 0;
+    DynaRun(emu);
+    return R_EAX;
+}
+
+static long clone_syscall_thread(clone_t* args, uint64_t flags, int* ptid, int* ctid)
+{
+    long ret = clone_thread(clone_fn_thread, args, flags, ptid, ctid);
+    if(ret < 0) {
+        FreeX64Emu(&args->emu);
+        box_free(args);
+    }
+    return ret;
+}
+#endif
 
 void EXPORT x64Syscall(x64emu_t *emu)
 {
@@ -795,6 +824,12 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                         args->tls = (void*)R_R8;
                         args->set_tls = 1;
                     }
+                    #ifdef EMULATE_CLONE_THREAD
+                    if(flags & CLONE_THREAD) {
+                        S_RAX = clone_syscall_thread(args, flags, (int*)R_RDX, (int*)R_R10);
+                        break;
+                    }
+                    #endif
                     void* mystack = NULL;
                     if(my_context->stack_clone_used) {
                         args->stack2free = mystack = box_malloc(1024*1024);  // stack for own process...
@@ -986,6 +1021,18 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                 }
             }
             break;
+        #ifdef EMULATE_CLONE_THREAD
+        case 60:    // sys_exit
+            clone_thread_exit(S_EDI);
+            syscall(__NR_exit, S_EDI);
+            break;
+        case 218:   // sys_set_tid_address
+            if(clone_thread_set_tid_address((int*)R_RDI))
+                S_RAX = GetTID();
+            else
+                S_RAX = syscall(__NR_set_tid_address, R_RDI);
+            break;
+        #endif
         case 231:   // sys_exit_group
             my__exit(emu, S_EDI);
             break;
@@ -1276,6 +1323,16 @@ long EXPORT my_syscall(x64emu_t *emu)
                     args->tls = (void*)R_R9;
                     args->set_tls = 1;
                 }
+                #ifdef EMULATE_CLONE_THREAD
+                if(flags & CLONE_THREAD) {
+                    long ret = clone_syscall_thread(args, flags, (int*)R_RCX, (int*)R_R8);
+                    if(ret < 0) {
+                        errno = -ret;
+                        return -1;
+                    }
+                    return ret;
+                }
+                #endif
                 void* mystack = NULL;
                 if(my_context->stack_clone_used) {
                     args->stack2free = mystack = box_malloc(1024*1024);  // stack for own process...
@@ -1412,6 +1469,15 @@ long EXPORT my_syscall(x64emu_t *emu)
         #ifndef __NR_epoll_create
         case 213:
             return epoll_create(S_ESI);
+        #endif
+        #ifdef EMULATE_CLONE_THREAD
+        case 60:    // sys_exit
+            clone_thread_exit(S_ESI);
+            return syscall(__NR_exit, S_ESI);
+        case 218:   // sys_set_tid_address
+            if(clone_thread_set_tid_address((int*)R_RSI))
+                return GetTID();
+            return syscall(__NR_set_tid_address, R_RSI);
         #endif
         case 231:   // sys_exit_group
             my__exit(emu, S_ESI);
