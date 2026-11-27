@@ -73,6 +73,7 @@ int my_sigaltstack(x64emu_t* emu, const x64_stack_t* ss, x64_stack_t* oss);
 void* my_mmap64(x64emu_t* emu, void *addr, unsigned long length, int prot, int flags, int fd, int64_t offset);
 int my_munmap(x64emu_t* emu, void* addr, unsigned long length);
 int my_mprotect(x64emu_t* emu, void *addr, unsigned long len, int prot);
+int my_semctl(int semid, int semnum, int cmd, void* arg);
 int my_madvise(x64emu_t* emu, void* addr, size_t length, int advice);
 void* my_mremap(x64emu_t* emu, void* old_addr, size_t old_size, size_t new_size, int flags, void* new_addr);
 #ifndef NOALIGN
@@ -136,6 +137,9 @@ static const scwrap_t syscallwrap[] = {
     //[25] = {__NR_mremap, 5},    // wrapped to track protection
     [27] = {__NR_mincore, 3},
     //[28] = {__NR_madvise, 3},   // wrapped for guest page size
+    [29] = {__NR_shmget, 3},
+    [30] = {__NR_shmat, 3},
+    [31] = {__NR_shmctl, 3},
     #ifdef __NR_dup
     [32] = {__NR_dup, 1},
     #endif
@@ -176,7 +180,13 @@ static const scwrap_t syscallwrap[] = {
     [61] = {__NR_wait4, 4},
     [62] = {__NR_kill, 2 },
     //[63] = {__NR_uname, 1}, // Needs wrapping, use old_utsname
-    [66] = {__NR_semctl, 4},
+    [64] = {__NR_semget, 3},
+    [65] = {__NR_semop, 3},
+    [67] = {__NR_shmdt, 1},
+    [68] = {__NR_msgget, 2},
+    [69] = {__NR_msgsnd, 4},
+    [70] = {__NR_msgrcv, 5},
+    [71] = {__NR_msgctl, 3},
     //[72] = {__NR_fnctl, 3}, // Needs wrapping, and not always defined anyway
     [73] = {__NR_flock, 2},
     [74] = {__NR_fsync, 1},
@@ -893,6 +903,11 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                 strcpy(old->machine, "x86_64");
             }
             break;
+        case 66:    //semctl
+            S_RAX = my_semctl(S_EDI, S_ESI, S_EDX, (void*)R_R10);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
         case 72:    //fcntl
             S_RAX = my_fcntl(emu, S_EDI, S_ESI, (void*)R_RDX);
             if(S_RAX==-1)
@@ -1390,6 +1405,8 @@ long EXPORT my_syscall(x64emu_t *emu)
                 strcpy(old->machine, "x86_64");
                 return ret;
             }
+        case 66:    //semctl
+            return my_semctl(S_ESI, S_EDX, S_ECX, (void*)R_R8);
         case 72:    //fcntl
             return my_fcntl(emu, S_ESI, S_EDX, (void*)R_RCX);
         #ifndef __NR_getdents
