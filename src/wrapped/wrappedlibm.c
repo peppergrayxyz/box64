@@ -155,23 +155,53 @@ static int native_to_x86_excepts(int e) {
     return x;
 }
 
+#if defined(ARM64) && !defined(FE_DENORMAL)
+// x86's denormal exception (0x02) is FPSR.IDC, that glibc and musl leave alone
+#define FPSR_IDC 0x80
+static int denormal_get(void)
+{
+    uint64_t fpsr;
+    __asm__ __volatile__("mrs %0, fpsr" : "=r"(fpsr));
+    return (fpsr & FPSR_IDC) ? 0x02 : 0;
+}
+static void denormal_set(int on)
+{
+    uint64_t fpsr;
+    __asm__ __volatile__("mrs %0, fpsr" : "=r"(fpsr));
+    fpsr = on ? (fpsr | FPSR_IDC) : (fpsr & ~(uint64_t)FPSR_IDC);
+    __asm__ __volatile__("msr fpsr, %0" :: "r"(fpsr));
+}
+static int denormal_env(const fenv_t* envp)
+{
+    return envp != FE_DFL_ENV && (envp->__fpsr & FPSR_IDC);
+}
+#else
+static int denormal_get(void) { return 0; }
+static void denormal_set(int on) { (void)on; }
+static int denormal_env(const fenv_t* envp) { (void)envp; return 0; }
+#endif
+
 EXPORT int my_feraiseexcept(x64emu_t* emu, int e){
-    return feraiseexcept(x86_to_native_excepts(e));
+    int r = feraiseexcept(x86_to_native_excepts(e));
+    if (e & 0x02) denormal_set(1);
+    return r;
 }
 
 EXPORT int my_feclearexcept(x64emu_t* emu, int e) {
-    return feclearexcept(x86_to_native_excepts(e));
+    int r = feclearexcept(x86_to_native_excepts(e));
+    if (e & 0x02) denormal_set(0);
+    return r;
 }
 
 EXPORT int my_fetestexcept(x64emu_t* emu, int e) {
     int r = fetestexcept(x86_to_native_excepts(e));
-    return native_to_x86_excepts(r);
+    return native_to_x86_excepts(r) | (e & denormal_get());
 }
 
 // x86's fexcept_t is an unsigned short with the x86 exception bits
 EXPORT int my_fegetexceptflag(x64emu_t* emu, uint16_t* flagp, int e)
 {
-    *flagp = native_to_x86_excepts(fetestexcept(x86_to_native_excepts(e)));
+    *flagp = native_to_x86_excepts(fetestexcept(x86_to_native_excepts(e))) | (e & denormal_get());
     return 0;
 }
 
@@ -180,6 +210,7 @@ EXPORT int my_fesetexceptflag(x64emu_t* emu, const uint16_t* flagp, int e)
     int n = x86_to_native_excepts(e);
     int set = x86_to_native_excepts(*flagp) & n;
     feclearexcept(n & ~set);
+    if (e & 0x02) denormal_set(*flagp & 0x02);
     return feraiseexcept(set);
 }
 
@@ -209,14 +240,19 @@ static void round_to_emu(x64emu_t* emu)
 
 EXPORT int my_fesetenv(x64emu_t* emu, const fenv_t* envp)
 {
-    int ret = fesetenv(x86_to_native_fenv(envp));
+    envp = x86_to_native_fenv(envp);
+    int ret = fesetenv(envp);
+    denormal_set(denormal_env(envp));
     round_to_emu(emu);
     return ret;
 }
 
 EXPORT int my_feupdateenv(x64emu_t* emu, const fenv_t* envp)
 {
-    int ret = feupdateenv(x86_to_native_fenv(envp));
+    envp = x86_to_native_fenv(envp);
+    int denormal = denormal_get();
+    int ret = feupdateenv(envp);
+    denormal_set(denormal || denormal_env(envp));
     round_to_emu(emu);
     return ret;
 }
