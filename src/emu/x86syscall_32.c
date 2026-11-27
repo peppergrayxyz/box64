@@ -287,6 +287,7 @@ typedef struct clone_s {
     x64emu_t* emu;
     uint32_t  size;
     uint32_t  stack_from_context;
+    uint32_t  child_frees;  // CLONE_VM without CLONE_VFORK: the parent's copy is the child's
 } clone_t;
 
 static int clone32_fn(void* arg)
@@ -300,10 +301,12 @@ static int clone32_fn(void* arg)
     DynaRun(emu);
     int ret = S_EAX;
     printf_log(LOG_DEBUG, "%04d|clone32_fn ending with ret=%d (emu=%p)\n", GetTID(), ret, arg);
-    if(my_context->stack_clone_used && !args->stack_from_context)
+    if(args->child_frees && args->stack_from_context) {
+        // otherwise the stack is in args, and it stays mapped
+        FreeX64EmuFromStack(&emu);
         my_context->stack_clone_used = 0;
-    if(!args->stack_from_context)
-        munmap(args, args->size);   // this would free the stack, so is it ok to let the system free it instead?
+        munmap(args, args->size);
+    }
     _exit(ret);
 }
 
@@ -479,7 +482,9 @@ static void x86Syscall_run(x64emu_t *emu)
                         break;
                     }
                     args->emu = (x64emu_t*)(((uintptr_t)(args+1)+15)&~15ULL);
+                    args->size = size;
                     args->stack_from_context = stack_from_context;
+                    int child_frees = args->child_frees = (R_EBX&CLONE_VM) && !(R_EBX&CLONE_VFORK);
                     if(!stack_from_context)
                         mystack = (void*)((((uintptr_t)(args->emu+1))+15)&~15ULL);
                     x64emu_t * newemu = NewX64EmuFromStack(args->emu, emu->context, R_EIP, (uintptr_t)stack_base, 0);
@@ -487,7 +492,7 @@ static void x86Syscall_run(x64emu_t *emu)
                     CloneEmu(newemu, emu);
                     newemu->regs[_SP].q[0] = sp;  // setup new stack pointer
                     int64_t ret = clone(clone32_fn, (void*)((uintptr_t)mystack+1024*1024), R_EBX, args, R_EDX, R_ESI, R_EDI);
-                    if(ret==-1) {
+                    if(ret==-1 || !child_frees) {
                         int e = errno;
                         FreeX64EmuFromStack(&newemu);
                         if(stack_from_context)

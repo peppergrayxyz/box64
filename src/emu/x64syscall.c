@@ -548,6 +548,7 @@ typedef struct clone_s {
     void* stack2free;
     void* tls;
     int set_tls;
+    int child_frees;    // CLONE_VM without CLONE_VFORK: the parent's copy is the child's
 } clone_t;
 
 #if !defined(__NR_utime) || !defined(__NR_utimes) || !defined(__NR_futimesat)
@@ -586,6 +587,8 @@ static int clone_fn_syscall(void* arg)
     R_RAX = 0;
     DynaRun(emu);
     int ret = R_EAX;
+    if(!args->child_frees)
+        _exit(ret);
     FreeX64Emu(&emu);
     void* stack2free = args->stack2free;
     box_free(args);
@@ -924,8 +927,9 @@ static void x64Syscall_linux_run(x64emu_t *emu)
                         my_context->stack_clone_used = 1;
                     }
                     flags&=~CLONE_SETTLS;   // to be handled differently
+                    int child_frees = args->child_frees = (flags&CLONE_VM) && !(flags&CLONE_VFORK);
                     int64_t ret = clone(clone_fn_syscall, (void*)((uintptr_t)mystack+1024*1024), flags, args, R_RDX, NULL, R_R10);
-                    if(ret==-1) {
+                    if(ret==-1 || !child_frees) {
                         int e = errno;
                         clone_args_free(args);
                         errno = e;
@@ -1495,8 +1499,9 @@ long EXPORT my_syscall(x64emu_t *emu)
                 }
                 // x86_64 raw clone is long clone(unsigned long flags, void *stack, int *parent_tid, int *child_tid, unsigned long tls);
                 flags &= ~CLONE_SETTLS;   // guest TLS is applied to the emulated FS base in clone_fn_syscall
+                int child_frees = args->child_frees = (flags&CLONE_VM) && !(flags&CLONE_VFORK);
                 long ret = clone(clone_fn_syscall, (void*)((uintptr_t)mystack+1024*1024), flags, args, R_RCX, NULL, R_R8);
-                if(ret==-1) {
+                if(ret==-1 || !child_frees) {
                     int e = errno;
                     clone_args_free(args);
                     errno = e;
