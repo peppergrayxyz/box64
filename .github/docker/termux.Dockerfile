@@ -1,5 +1,5 @@
 # box64 CI image, set up by contrib/ci.sh (build context: contrib/)
-ARG ARCH
+ARG ARCH=x86_64
 # fully qualified: podman has no short-name alias for it
 FROM docker.io/termux/termux-docker:${ARCH}
 ARG ARCH LIBC TOOLCHAIN

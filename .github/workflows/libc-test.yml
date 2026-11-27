@@ -59,7 +59,7 @@ jobs:
       CI_SH: contrib/ci.sh ${{ matrix.distro }} x86_64 ${{ matrix.libc }} ${{ matrix.toolchain }}
       LIBC_TEST_DIR: libc-test-${{ matrix.libc }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # the build step checks out this commit too (ci.sh reads LIBC_TEST_REV)
       - name: "Look up libc-test master"
@@ -70,17 +70,17 @@ jobs:
 
       - name: "Restore libc-test"
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: libc-test-${{ matrix.libc }}.tar.gz
           key: libc-test-${{ env.LIBC_TEST_REV }}-${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-x86_64-${{ hashFiles('contrib/ci.sh', 'contrib/libc-test.sh', format('.github/docker/{0}.Dockerfile', matrix.distro)) }}
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: "Build ${{ matrix.distro }} image"
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: contrib
           file: .github/docker/${{ matrix.distro }}.Dockerfile
@@ -100,7 +100,7 @@ jobs:
           $CI_SH libc-test build
           tar czf "$LIBC_TEST_DIR.tar.gz" "$LIBC_TEST_DIR"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libc-test-guest-${{ matrix.libc }}
           path: libc-test-${{ matrix.libc }}.tar.gz
@@ -123,13 +123,13 @@ jobs:
       CI_SH: contrib/ci.sh ${{ matrix.distro }} aarch64 ${{ matrix.libc }} ${{ matrix.toolchain }}
       BUILD_DIR: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # same image and cache as the ctest workflows of that distro
       - name: "Build ${{ matrix.distro }} image"
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: contrib
           file: .github/docker/${{ matrix.distro }}.Dockerfile
@@ -148,7 +148,7 @@ jobs:
         run: $CI_SH build
 
       # not libc-test-*: that would match the other host's results
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: libc-test-guest-*
           merge-multiple: true
@@ -182,7 +182,7 @@ jobs:
 
       - name: "Upload results"
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: libc-test-results-${{ matrix.libc }}-${{ matrix.toolchain }}-host
           path: |
