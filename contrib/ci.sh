@@ -13,6 +13,7 @@ Build and test box64 in a container, locally or in CI.
   distro libc toolchain  alpine musl gcc|llvm
                          gentoo glibc|musl gcc|llvm
                          ubuntu glibc gcc|llvm
+                         termux bionic llvm
 
   arch                   x86_64 aarch64 riscv64 loongarch64 ppc64le
 
@@ -64,6 +65,7 @@ case $distro/$libc/$toolchain in
     gentoo/musl/gcc)   stage3=musl ;;
     gentoo/musl/llvm)  stage3=musl-llvm ;;
     ubuntu/glibc/gcc | ubuntu/glibc/llvm) ;;
+    termux/bionic/llvm) ;;
     *) error "unsupported target: $distro $libc $toolchain" ;;
 esac
 
@@ -75,6 +77,8 @@ case $arch in
     ppc64le)     cmake_flags="-DPPC64LE=ON -DBAD_SIGNAL=ON" ;;
     *) error "unsupported arch: $arch" ;;
 esac
+# TERMUX implies ANDROID
+if [ "$distro" = termux ]; then cmake_flags+=" -DTERMUX=ON"; fi
 
 # a foreign arch (in "install": foreign to the image) is cross-compiled
 cross=false
@@ -95,6 +99,8 @@ libc_test_dir=${LIBC_TEST_DIR:-libc-test-$distro-$libc-$toolchain}
 # --- install, run by the Dockerfiles ----------------------------------------
 
 toolchain_file=/usr/share/cmake/box64-ci.cmake
+# Android has no /usr
+if [ "$distro" = termux ]; then toolchain_file=/data/data/com.termux/files/usr/share/cmake/box64-ci.cmake; fi
 triple=${arch/ppc64le/powerpc64le}-alpine-linux-musl
 
 install_alpine() {
@@ -187,9 +193,15 @@ install_gentoo() {
     rm -rf /var/cache/distfiles/* /var/cache/binpkgs/* /var/tmp/portage/*
 }
 
+install_termux() {
+    apt-get update
+    apt-get install -y clang lld llvm cmake make python git libandroid-sysv-semaphore
+}
+
 # the Dockerfiles point CMAKE_TOOLCHAIN_FILE here
 write_toolchain_file() {
     local cc=${toolchain/llvm/clang}
+    mkdir -p "$(dirname "$toolchain_file")"
     {
         echo "set(CMAKE_C_COMPILER $cc)"
         echo "set(CMAKE_ASM_COMPILER $cc)"
@@ -249,9 +261,13 @@ cmd_image() {
 cmd_build() {
     local cc=${toolchain/llvm/clang} ld=ld
     if [ "$toolchain" = llvm ]; then ld=ld.lld; fi
+
     # shellcheck disable=SC2016
-    docker_run sh -c '. /etc/os-release && echo "$PRETTY_NAME"; for tool; do "$tool" --version | head -1; done' \
-        sh "$cc" "$ld" cmake
+    docker_run sh -c 'name=$1; shift
+                      if [ -r /etc/os-release ]; then . /etc/os-release; name=$PRETTY_NAME; fi
+                      echo "$name"
+                      for tool; do "$tool" --version | head -1; done' \
+        sh "$distro" "$cc" "$ld" cmake
 
     info "building box64 for $arch in $build_dir (Box32: $box32)"
     # shellcheck disable=SC2086

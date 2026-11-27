@@ -13,7 +13,7 @@ cmd_build() {
 
     cp config.mak.def config.mak
     case $($CC -dumpmachine) in
-        *musl*)
+        *musl* | *android*)
             # drop the "glibc specific settings" block
             sed -i '/^# glibc specific settings/,$d' config.mak ;;
     esac

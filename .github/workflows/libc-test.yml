@@ -17,6 +17,7 @@ on:
       - ".github/workflows/libc-test.yml"
       - ".github/docker/alpine.Dockerfile"
       - ".github/docker/ubuntu.Dockerfile"
+      - ".github/docker/termux.Dockerfile"
       - "contrib/ci.sh"
       - "contrib/libc-test.sh"
   pull_request:
@@ -32,6 +33,7 @@ on:
       - ".github/workflows/libc-test.yml"
       - ".github/docker/alpine.Dockerfile"
       - ".github/docker/ubuntu.Dockerfile"
+      - ".github/docker/termux.Dockerfile"
       - "contrib/ci.sh"
       - "contrib/libc-test.sh"
 
@@ -48,6 +50,7 @@ jobs:
         include:
           - { distro: ubuntu, libc: glibc, toolchain: gcc }
           - { distro: alpine, libc: musl, toolchain: llvm }
+          - { distro: termux, libc: bionic, toolchain: llvm }
 
     runs-on: ubuntu-latest
     env:
@@ -108,10 +111,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { distro: ubuntu, libc: glibc, toolchain: gcc }
-          - { distro: alpine, libc: musl, toolchain: llvm }
+          - { distro: ubuntu, libc: glibc, toolchain: gcc, guests: glibc musl }
+          - { distro: alpine, libc: musl, toolchain: llvm, guests: glibc musl }
+          - { distro: termux, libc: bionic, toolchain: llvm, guests: bionic, experimental: true }
 
     runs-on: ubuntu-24.04-arm
+    continue-on-error: ${{ matrix.experimental == true }}
     env:
       CI_SH: contrib/ci.sh ${{ matrix.distro }} aarch64 ${{ matrix.libc }} ${{ matrix.toolchain }}
       BUILD_DIR: build
@@ -149,18 +154,23 @@ jobs:
       - name: "Unpack libc-test"
         run: for t in libc-test-*.tar.gz; do tar xzf "$t"; done
 
-      # the musl guest also runs when the glibc guest has regressions
+      # each guest also runs when the one before has regressions
       - name: "Run libc-test with Box64 (glibc guest)"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && contains(matrix.guests, 'glibc') }}
         run: $CI_SH libc-test run libc-test-glibc
 
       - name: "Run libc-test with Box64 (musl guest)"
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && contains(matrix.guests, 'musl') }}
         run: $CI_SH libc-test run libc-test-musl
+
+      - name: "Run libc-test with Box64 (bionic guest)"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && contains(matrix.guests, 'bionic') }}
+        run: $CI_SH libc-test run libc-test-bionic
 
       - name: "Summary"
         if: always()
         run: |
-          for guest in glibc musl; do
+          for guest in ${{ matrix.guests }}; do
             echo "### ${{ matrix.libc }}-${{ matrix.toolchain }} host, $guest guest"
             echo "libc-test $(cat libc-test-$guest/REVISION || echo "(unknown revision)")"
             echo '```'
