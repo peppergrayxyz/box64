@@ -213,10 +213,8 @@ uint64_t RunFunctionHandler(x64emu_t* emu, int* exit, int dynarec, x64_ucontext_
 
 EXPORT int my_sigaltstack(x64emu_t* emu, const x64_stack_t* ss, x64_stack_t* oss)
 {
-    if(!ss && !oss) {   // this is not true, ss can be NULL to retreive oss info only
-        errno = EFAULT;
-        return -1;
-    }
+    if(!ss && !oss)     // valid, and does nothing
+        return 0;
     signal_jmpbuf_active = 1;
     if(sigsetjmp(SIG_JMPBUF, 1)) {
         // segfault while gathering function name...
@@ -243,6 +241,12 @@ EXPORT int my_sigaltstack(x64emu_t* emu, const x64_stack_t* ss, x64_stack_t* oss
     printf_log(LOG_DEBUG, "%04d|sigaltstack called ss=%p[flags=0x%x, sp=%p, ss=0x%lx], oss=%p\n", GetTID(), ss, ss->ss_flags, ss->ss_sp, ss->ss_size, oss);
     if(ss->ss_flags && ss->ss_flags!=SS_DISABLE && ss->ss_flags!=SS_ONSTACK) {
         errno = EINVAL;
+        signal_jmpbuf_active = 0;
+        return -1;
+    }
+    // x86_64's MINSIGSTKSZ, what the kernel checks
+    if(ss->ss_flags!=SS_DISABLE && ss->ss_size<2048) {
+        errno = ENOMEM;
         signal_jmpbuf_active = 0;
         return -1;
     }
