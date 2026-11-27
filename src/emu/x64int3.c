@@ -55,18 +55,19 @@ x64emu_t* x64emu_fork(x64emu_t* emu, int forktype)
         v = fork();
     /*if(type == EMUTYPE_MAIN)
         thread_set_emu(emu);*/
-    if(v==EAGAIN || v==ENOMEM) {
-        // error...
-    } else if(v!=0) {  
+    if(v!=0) {
+        int save_errno = errno;
         // execute atforks parent functions
         for (int i=0; i<my_context->atfork_sz; ++i)
             if(my_context->atforks[i].parent)
                 EmuCall(emu, my_context->atforks[i].parent);
-        if(forktype==3) {
+        if(forktype==3 && v>0) {
             // vfork, the parent wait the end or execve of the son
             waitpid(v, NULL, WEXITED);
         }
-    } else if(v==0) {
+        if(v<0)
+            errno = save_errno;
+    } else {
         // execute atforks child functions
         for (int i=0; i<my_context->atfork_sz; ++i)
             if(my_context->atforks[i].child)
