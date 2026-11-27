@@ -92,6 +92,8 @@ extern void la64_crc_autocrc(); // same as la64_crc, but not using regular ABI
 #define ADDITIONNAL_CHECKS()
 #define ARCH_CRC_INLINE
 extern void la64_next_invalid();
+extern void* create_updateflags();
+#define ARCH_UPDATEFLAGS()      create_updateflags()
 #define PRINT_OPCODE(C, A)  la64_print(C, A)
 
 #elif defined(RV64)

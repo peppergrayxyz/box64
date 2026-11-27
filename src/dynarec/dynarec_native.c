@@ -573,6 +573,13 @@ dynablock_t* FillBlock64(uintptr_t addr, int is32bits, int inst_max, int is_new,
         dynarec_log(LOG_DEBUG, "Not creating dynablock at %p as in a HotPage\n", (void*)addr);
         return NULL;
     }
+    #ifdef ARCH_UPDATEFLAGS
+    // blocks call the UpdateFlags block by address, it must exist before any of them
+    if(!ARCH_UPDATEFLAGS()) {
+        dynarec_log(LOG_INFO, "Cannot create the UpdateFlags block, no dynablock for %p\n", (void*)addr);
+        return NULL;
+    }
+    #endif
     uint32_t prot = getProtection_fast(addr);
 #ifndef _WIN32
     if((prot&req_prot)!=req_prot) {// cannot be run, get out of the Dynarec
