@@ -29,10 +29,12 @@ typedef double (*dFdd_t)(double, double);
 #if defined(HAVE_LD80BITS) || defined(ANDROID)
 typedef int64_t (*IFD_t)(long double);
 typedef long double (*DFD_t)(long double);
+typedef intptr_t (*lFD_t)(long double);
 typedef long double (*DFDD_t)(long double, long double);
 #else // !HAVE_LD80BITS && !ANDROID
 typedef int64_t (*IFD_t)(double);
 typedef double (*DFD_t)(double);
+typedef intptr_t (*lFD_t)(double);
 typedef double (*DFDD_t)(double, double);
 #endif
 
@@ -77,9 +79,11 @@ typedef double (*DFDD_t)(double, double);
 	GO(nearbyint, dFd_t) \
 	GO(pow10, dFd_t) \
 	GO(rint, dFd_t) \
+	GO(nearbyintl, DFD_t) \
 	GO(pow10l, DFD_t) \
 	GO(lrintf, lFf_t) \
 	GO(lrint, lFd_t) \
+	GO(lrintl, lFD_t) \
 	GO(__atan2f_finite, fFff_t) \
 	GO(__fmodf_finite, fFff_t) \
 	GO(__hypotf_finite, fFff_t) \

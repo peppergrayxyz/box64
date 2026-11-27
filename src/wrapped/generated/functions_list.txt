@@ -341,14 +341,17 @@
 #() dFpd
 #() dFpL
 #() dFpp
+#() DFED
 #() DFiD
 #() DFDi
 #() DFDD
+#() DFDl
 #() DFDp
 #() DFpp
 #() lFEi
 #() lFEf
 #() lFEd
+#() lFED
 #() lFii
 #() lFiL
 #() lFip
@@ -808,6 +811,7 @@
 #() dFppd
 #() dFppp
 #() DFDDD
+#() DFDDp
 #() DFppi
 #() DFppp
 #() lFiIL
@@ -6324,11 +6328,14 @@ wrappedlibm:
   - pow10
   - rint
 - DFD:
+  - nearbyintl
   - pow10l
 - lFf:
   - lrintf
 - lFd:
   - lrint
+- lFD:
+  - lrintl
 - fFff:
   - __atan2f_finite
   - __fmodf_finite

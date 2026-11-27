@@ -138,7 +138,7 @@ GOW(exp10, dFd)
 GOW(exp10f, fFf)
 // __exp10f_finite
 // __exp10_finite
-// exp10l   // Weak
+GOWD(exp10l, DFD, exp10)
 GOW(exp2, dFd)
 GOW(exp2f, fFf)
 GOM(__exp2f_finite, fFf)
@@ -156,7 +156,7 @@ GOW(fabsf, fFf)
 GOWD(fabsl, DFD, fabs)
 GOW(fdim, dFdd)
 GOW(fdimf, fFff)
-// fdiml    // Weak
+GOWD(fdiml, DFDD, fdim)
 GOM(feclearexcept, iFEi)
 GO(fedisableexcept, iFi)
 GO(feenableexcept, iFi)
@@ -217,7 +217,7 @@ GOW(ilogbf, iFf)
 GOWM(ilogb, iFd)
 GOWM(ilogbf, iFf)
 #endif
-// ilogbl   // Weak
+GOWD(ilogbl, iFD, my_ilogb)
 // __issignaling
 // __issignalingf
 // _ITM_deregisterTMCloneTable // Weak
@@ -275,14 +275,14 @@ GOM(__log2_finite, dFd)
 GOWD(log2l, DFD, log2)
 GOW(logb, dFd)
 GOW(logbf, fFf)
-// logbl    // Weak
+GOWD(logbl, DFD, logb)
 GOW(logf, fFf)
 GOM(__logf_finite, fFf)
 GOM(__log_finite, dFd)
 GOWD(logl, DFD, log)
 GOWM(lrint, lFEd)
 GOWM(lrintf, lFEf)
-// lrintl   // Weak
+GOWM(lrintl, lFED)
 GOW(lround, lFd)
 GOW(lroundf, lFf)
 GOWD(lroundl, lFD, lround)
@@ -295,13 +295,13 @@ GOW(nanf, fFp)
 // nanl // Weak
 GOWM(nearbyint, dFEd)
 GOWM(nearbyintf, fFEf)
-// nearbyintl   // Weak
+GOWM(nearbyintl, DFED)
 GOW(nextafter, dFdd)
 GOW(nextafterf, fFff)
 GOWD(nextafterl, DFDD, nextafter)
 GOWD(nexttoward, dFdD, my_nexttoward) // This loses precision
 GOWD(nexttowardf, fFfD, my_nexttowardf) // This loses precision
-// nexttowardl  // Weak
+GOWD(nexttowardl, DFDD, nextafter)
 GOW(pow, dFdd)
 GOWM(pow10, dFd)
 GOWM(pow10f, fFf)
@@ -315,10 +315,10 @@ GOW(remainder, dFdd)
 GOW(remainderf, fFff)
 // __remainderf_finite
 // __remainder_finite
-// remainderl   // Weak
+GOWD(remainderl, DFDD, remainder)
 GOW(remquo, dFddp)
 GOW(remquof, fFffp)
-// remquol  // Weak
+GOWD(remquol, DFDDp, remquo)
 GOWM(rint, dFEd)
 GOWM(rintf, fFEf)
 GOWD(rintl, DFD, rint)
@@ -335,7 +335,7 @@ GOW(scalbf, fFff)
 // scalbl   // Weak
 GOW(scalbln, dFdl)
 GOW(scalblnf, fFfl)
-// scalblnl // Weak
+GOWD(scalblnl, DFDl, scalbln)
 GOW(scalbn, dFdi)
 GOW(scalbnf, fFfi)
 GOWD(scalbnl, DFDi, scalbn)

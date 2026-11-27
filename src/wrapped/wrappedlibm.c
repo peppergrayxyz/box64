@@ -216,15 +216,16 @@ EXPORT int my_fegetround(x64emu_t* emu)
     }
 }
 
-#define FROUND(N, T, R)                      \
+#define FROUND2(N, T, R, F)                  \
     EXPORT R my_##N(x64emu_t* emu, T val)    \
     {                                        \
         if (BOX64ENV(sync_rounding)) {           \
             int round = emu->cw.x16 & 0xc00; \
             fesetround(TO_NATIVE(round));    \
         }                                    \
-        return N(val);                       \
+        return F(val);                       \
     }
+#define FROUND(N, T, R) FROUND2(N, T, R, N)
 
 FROUND(rint, double, double)
 FROUND(rintf, float, float)
@@ -237,14 +238,7 @@ FROUND(nearbyintf, float, float)
 #ifdef HAVE_LD80BITS
 FROUND(llrintl, long double, long long)
 #else
-EXPORT int64_t my_llrintl(x64emu_t* emu, double val)
-{
-    if (BOX64ENV(sync_rounding)) {
-        int round = emu->cw.x16 & 0xc00;
-        fesetround(TO_NATIVE(round));
-    }
-    return (int64_t)llrint(val);
-}
+FROUND2(llrintl, double, long long, llrint)
 EXPORT double my_nexttoward(x64emu_t* emu, double val, double to)
 {
     return nexttoward(val, to);
@@ -267,6 +261,14 @@ EXPORT int my_ilogbf(float x)
     int r = ilogbf(x);
     return (r == FP_ILOGB0 || (r == FP_ILOGBNAN && isnan(x))) ? INT_MIN : r;
 }
+#endif
+
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
+FROUND(lrintl, long double, long)
+FROUND(nearbyintl, long double, long double)
+#else
+FROUND2(lrintl, double, long, lrint)
+FROUND2(nearbyintl, double, double, nearbyint)
 #endif
 
 #ifdef ANDROID

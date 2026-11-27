@@ -4273,14 +4273,18 @@ typedef complexl_t (*YFY_t)(complexl_t);
 typedef int64_t (*IFED_t)(x64emu_t*, long double);
 typedef float (*fFfD_t)(float, long double);
 typedef double (*dFdD_t)(double, long double);
+typedef long double (*DFED_t)(x64emu_t*, long double);
 typedef long double (*DFiD_t)(int32_t, long double);
 typedef long double (*DFDi_t)(long double, int32_t);
 typedef long double (*DFDD_t)(long double, long double);
+typedef long double (*DFDl_t)(long double, intptr_t);
 typedef long double (*DFDp_t)(long double, void*);
 typedef long double (*DFpp_t)(void*, void*);
+typedef intptr_t (*lFED_t)(x64emu_t*, long double);
 typedef complexl_t (*YFYY_t)(complexl_t, complexl_t);
 typedef void (*vFDpp_t)(long double, void*, void*);
 typedef long double (*DFDDD_t)(long double, long double, long double);
+typedef long double (*DFDDp_t)(long double, long double, void*);
 typedef long double (*DFppi_t)(void*, void*, int32_t);
 typedef long double (*DFppp_t)(void*, void*, void*);
 typedef void* (*pFDip_t)(long double, int32_t, void*);
@@ -4298,14 +4302,18 @@ typedef complex_t (*YFY_t)(complex_t);
 typedef int64_t (*IFED_t)(x64emu_t*, double);
 typedef float (*fFfD_t)(float, double);
 typedef double (*dFdD_t)(double, double);
+typedef double (*DFED_t)(x64emu_t*, double);
 typedef double (*DFiD_t)(int32_t, double);
 typedef double (*DFDi_t)(double, int32_t);
 typedef double (*DFDD_t)(double, double);
+typedef double (*DFDl_t)(double, intptr_t);
 typedef double (*DFDp_t)(double, void*);
 typedef double (*DFpp_t)(void*, void*);
+typedef intptr_t (*lFED_t)(x64emu_t*, double);
 typedef complex_t (*YFYY_t)(complex_t, complex_t);
 typedef void (*vFDpp_t)(double, void*, void*);
 typedef double (*DFDDD_t)(double, double, double);
+typedef double (*DFDDp_t)(double, double, void*);
 typedef double (*DFppi_t)(void*, void*, int32_t);
 typedef double (*DFppp_t)(void*, void*, void*);
 typedef void* (*pFDip_t)(double, int32_t, void*);
@@ -8571,14 +8579,18 @@ void YFY(x64emu_t *emu, uintptr_t fcn) { YFY_t fn = (YFY_t)fcn; from_complexl(em
 void IFED(x64emu_t *emu, uintptr_t fcn) { IFED_t fn = (IFED_t)fcn; S_RAX=(int64_t)fn(emu, *(long double*)getXMM(emu, 0)); }
 void fFfD(x64emu_t *emu, uintptr_t fcn) { fFfD_t fn = (fFfD_t)fcn; getXMM(emu, 0)->f[0]=fn(getXMM(emu, 0)->f[0], *(long double*)getXMM(emu, 1)); }
 void dFdD(x64emu_t *emu, uintptr_t fcn) { dFdD_t fn = (dFdD_t)fcn; getXMM(emu, 0)->d[0]=fn(getXMM(emu, 0)->d[0], *(long double*)getXMM(emu, 1)); }
+void DFED(x64emu_t *emu, uintptr_t fcn) { DFED_t fn = (DFED_t)fcn; long double ld=fn(emu, *(long double*)getXMM(emu, 0)); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFiD(x64emu_t *emu, uintptr_t fcn) { DFiD_t fn = (DFiD_t)fcn; long double ld=fn((int32_t)R_RDI, *(long double*)getXMM(emu, 0)); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFDi(x64emu_t *emu, uintptr_t fcn) { DFDi_t fn = (DFDi_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), (int32_t)R_RDI); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFDD(x64emu_t *emu, uintptr_t fcn) { DFDD_t fn = (DFDD_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), *(long double*)getXMM(emu, 1)); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
+void DFDl(x64emu_t *emu, uintptr_t fcn) { DFDl_t fn = (DFDl_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), (intptr_t)R_RDI); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFDp(x64emu_t *emu, uintptr_t fcn) { DFDp_t fn = (DFDp_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), (void*)R_RDI); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFpp(x64emu_t *emu, uintptr_t fcn) { DFpp_t fn = (DFpp_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
+void lFED(x64emu_t *emu, uintptr_t fcn) { lFED_t fn = (lFED_t)fcn; R_RAX=(intptr_t)fn(emu, *(long double*)getXMM(emu, 0)); }
 void YFYY(x64emu_t *emu, uintptr_t fcn) { YFYY_t fn = (YFYY_t)fcn; from_complexl(emu, fn(to_complexl(emu, (uintptr_t)getXMM(emu, 0)), to_complexl(emu, (uintptr_t)getXMM(emu, 1)))); }
 void vFDpp(x64emu_t *emu, uintptr_t fcn) { vFDpp_t fn = (vFDpp_t)fcn; fn(*(long double*)getXMM(emu, 0), (void*)R_RDI, (void*)R_RSI); }
 void DFDDD(x64emu_t *emu, uintptr_t fcn) { DFDDD_t fn = (DFDDD_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), *(long double*)getXMM(emu, 1), *(long double*)getXMM(emu, 2)); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
+void DFDDp(x64emu_t *emu, uintptr_t fcn) { DFDDp_t fn = (DFDDp_t)fcn; long double ld=fn(*(long double*)getXMM(emu, 0), *(long double*)getXMM(emu, 1), (void*)R_RDI); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFppi(x64emu_t *emu, uintptr_t fcn) { DFppi_t fn = (DFppi_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI, (int32_t)R_RDX); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void DFppp(x64emu_t *emu, uintptr_t fcn) { DFppp_t fn = (DFppp_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI, (void*)R_RDX); getXMM(emu, 0)->u128=*(__uint128_t*)&ld; }
 void pFDip(x64emu_t *emu, uintptr_t fcn) { pFDip_t fn = (pFDip_t)fcn; R_RAX=(uintptr_t)fn(*(long double*)getXMM(emu, 0), (int32_t)R_RDI, (void*)R_RSI); }
@@ -8596,14 +8608,18 @@ void YFY(x64emu_t *emu, uintptr_t fcn) { YFY_t fn = (YFY_t)fcn; from_complexk(em
 void IFED(x64emu_t *emu, uintptr_t fcn) { IFED_t fn = (IFED_t)fcn; S_RAX=(int64_t)fn(emu, FromLD((void*)(R_RSP + 8))); }
 void fFfD(x64emu_t *emu, uintptr_t fcn) { fFfD_t fn = (fFfD_t)fcn; getXMM(emu, 0)->f[0]=fn(getXMM(emu, 0)->f[0], FromLD((void*)(R_RSP + 8))); }
 void dFdD(x64emu_t *emu, uintptr_t fcn) { dFdD_t fn = (dFdD_t)fcn; getXMM(emu, 0)->d[0]=fn(getXMM(emu, 0)->d[0], FromLD((void*)(R_RSP + 8))); }
+void DFED(x64emu_t *emu, uintptr_t fcn) { DFED_t fn = (DFED_t)fcn; double db=fn(emu, FromLD((void*)(R_RSP + 8))); fpu_do_push(emu); ST0val = db; }
 void DFiD(x64emu_t *emu, uintptr_t fcn) { DFiD_t fn = (DFiD_t)fcn; double db=fn((int32_t)R_RDI, FromLD((void*)(R_RSP + 8))); fpu_do_push(emu); ST0val = db; }
 void DFDi(x64emu_t *emu, uintptr_t fcn) { DFDi_t fn = (DFDi_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), (int32_t)R_RDI); fpu_do_push(emu); ST0val = db; }
 void DFDD(x64emu_t *emu, uintptr_t fcn) { DFDD_t fn = (DFDD_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), FromLD((void*)(R_RSP + 24))); fpu_do_push(emu); ST0val = db; }
+void DFDl(x64emu_t *emu, uintptr_t fcn) { DFDl_t fn = (DFDl_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), (intptr_t)R_RDI); fpu_do_push(emu); ST0val = db; }
 void DFDp(x64emu_t *emu, uintptr_t fcn) { DFDp_t fn = (DFDp_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), (void*)R_RDI); fpu_do_push(emu); ST0val = db; }
 void DFpp(x64emu_t *emu, uintptr_t fcn) { DFpp_t fn = (DFpp_t)fcn; double db=fn((void*)R_RDI, (void*)R_RSI); fpu_do_push(emu); ST0val = db; }
+void lFED(x64emu_t *emu, uintptr_t fcn) { lFED_t fn = (lFED_t)fcn; R_RAX=(intptr_t)fn(emu, FromLD((void*)(R_RSP + 8))); }
 void YFYY(x64emu_t *emu, uintptr_t fcn) { YFYY_t fn = (YFYY_t)fcn; from_complexk(emu, fn(to_complexk(emu, R_RSP + 8), to_complexk(emu, R_RSP + 40))); }
 void vFDpp(x64emu_t *emu, uintptr_t fcn) { vFDpp_t fn = (vFDpp_t)fcn; fn(FromLD((void*)(R_RSP + 8)), (void*)R_RDI, (void*)R_RSI); }
 void DFDDD(x64emu_t *emu, uintptr_t fcn) { DFDDD_t fn = (DFDDD_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), FromLD((void*)(R_RSP + 24)), FromLD((void*)(R_RSP + 40))); fpu_do_push(emu); ST0val = db; }
+void DFDDp(x64emu_t *emu, uintptr_t fcn) { DFDDp_t fn = (DFDDp_t)fcn; double db=fn(FromLD((void*)(R_RSP + 8)), FromLD((void*)(R_RSP + 24)), (void*)R_RDI); fpu_do_push(emu); ST0val = db; }
 void DFppi(x64emu_t *emu, uintptr_t fcn) { DFppi_t fn = (DFppi_t)fcn; double db=fn((void*)R_RDI, (void*)R_RSI, (int32_t)R_RDX); fpu_do_push(emu); ST0val = db; }
 void DFppp(x64emu_t *emu, uintptr_t fcn) { DFppp_t fn = (DFppp_t)fcn; double db=fn((void*)R_RDI, (void*)R_RSI, (void*)R_RDX); fpu_do_push(emu); ST0val = db; }
 void pFDip(x64emu_t *emu, uintptr_t fcn) { pFDip_t fn = (pFDip_t)fcn; R_RAX=(uintptr_t)fn(FromLD((void*)(R_RSP + 8)), (int32_t)R_RDI, (void*)R_RSI); }
@@ -8621,14 +8637,18 @@ void YFY(x64emu_t *emu, uintptr_t fcn) { YFY_t fn = (YFY_t)fcn; from_complexl(em
 void IFED(x64emu_t *emu, uintptr_t fcn) { IFED_t fn = (IFED_t)fcn; S_RAX=(int64_t)fn(emu, LD2localLD((void*)(R_RSP + 8))); }
 void fFfD(x64emu_t *emu, uintptr_t fcn) { fFfD_t fn = (fFfD_t)fcn; getXMM(emu, 0)->f[0]=fn(getXMM(emu, 0)->f[0], LD2localLD((void*)(R_RSP + 8))); }
 void dFdD(x64emu_t *emu, uintptr_t fcn) { dFdD_t fn = (dFdD_t)fcn; getXMM(emu, 0)->d[0]=fn(getXMM(emu, 0)->d[0], LD2localLD((void*)(R_RSP + 8))); }
+void DFED(x64emu_t *emu, uintptr_t fcn) { DFED_t fn = (DFED_t)fcn; long double ld=fn(emu, LD2localLD((void*)(R_RSP + 8))); fpu_do_push(emu); ST0val = ld; }
 void DFiD(x64emu_t *emu, uintptr_t fcn) { DFiD_t fn = (DFiD_t)fcn; long double ld=fn((int32_t)R_RDI, LD2localLD((void*)(R_RSP + 8))); fpu_do_push(emu); ST0val = ld; }
 void DFDi(x64emu_t *emu, uintptr_t fcn) { DFDi_t fn = (DFDi_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), (int32_t)R_RDI); fpu_do_push(emu); ST0val = ld; }
 void DFDD(x64emu_t *emu, uintptr_t fcn) { DFDD_t fn = (DFDD_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), LD2localLD((void*)(R_RSP + 24))); fpu_do_push(emu); ST0val = ld; }
+void DFDl(x64emu_t *emu, uintptr_t fcn) { DFDl_t fn = (DFDl_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), (intptr_t)R_RDI); fpu_do_push(emu); ST0val = ld; }
 void DFDp(x64emu_t *emu, uintptr_t fcn) { DFDp_t fn = (DFDp_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), (void*)R_RDI); fpu_do_push(emu); ST0val = ld; }
 void DFpp(x64emu_t *emu, uintptr_t fcn) { DFpp_t fn = (DFpp_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI); fpu_do_push(emu); ST0val = ld; }
+void lFED(x64emu_t *emu, uintptr_t fcn) { lFED_t fn = (lFED_t)fcn; R_RAX=(intptr_t)fn(emu, LD2localLD((void*)(R_RSP + 8))); }
 void YFYY(x64emu_t *emu, uintptr_t fcn) { YFYY_t fn = (YFYY_t)fcn; from_complexl(emu, fn(to_complexl(emu, R_RSP + 8), to_complexl(emu, R_RSP + 40))); }
 void vFDpp(x64emu_t *emu, uintptr_t fcn) { vFDpp_t fn = (vFDpp_t)fcn; fn(LD2localLD((void*)(R_RSP + 8)), (void*)R_RDI, (void*)R_RSI); }
 void DFDDD(x64emu_t *emu, uintptr_t fcn) { DFDDD_t fn = (DFDDD_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), LD2localLD((void*)(R_RSP + 24)), LD2localLD((void*)(R_RSP + 40))); fpu_do_push(emu); ST0val = ld; }
+void DFDDp(x64emu_t *emu, uintptr_t fcn) { DFDDp_t fn = (DFDDp_t)fcn; long double ld=fn(LD2localLD((void*)(R_RSP + 8)), LD2localLD((void*)(R_RSP + 24)), (void*)R_RDI); fpu_do_push(emu); ST0val = ld; }
 void DFppi(x64emu_t *emu, uintptr_t fcn) { DFppi_t fn = (DFppi_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI, (int32_t)R_RDX); fpu_do_push(emu); ST0val = ld; }
 void DFppp(x64emu_t *emu, uintptr_t fcn) { DFppp_t fn = (DFppp_t)fcn; long double ld=fn((void*)R_RDI, (void*)R_RSI, (void*)R_RDX); fpu_do_push(emu); ST0val = ld; }
 void pFDip(x64emu_t *emu, uintptr_t fcn) { pFDip_t fn = (pFDip_t)fcn; R_RAX=(uintptr_t)fn(LD2localLD((void*)(R_RSP + 8)), (int32_t)R_RDI, (void*)R_RSI); }
@@ -16021,12 +16041,15 @@ int isRetX87Wrapper32(wrapper_t fun)
 int isRetX87Wrapper(wrapper_t fun) {
 	if (fun == &DFD) return 1;
 	if (fun == &DFY) return 1;
+	if (fun == &DFED) return 1;
 	if (fun == &DFiD) return 1;
 	if (fun == &DFDi) return 1;
 	if (fun == &DFDD) return 1;
+	if (fun == &DFDl) return 1;
 	if (fun == &DFDp) return 1;
 	if (fun == &DFpp) return 1;
 	if (fun == &DFDDD) return 1;
+	if (fun == &DFDDp) return 1;
 	if (fun == &DFppi) return 1;
 	if (fun == &DFppp) return 1;
 	return 0;
