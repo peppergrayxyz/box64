@@ -811,8 +811,8 @@ GO(herror, vFp)
 #else
 GO(host2netname, iFppp)
 #endif
-//GO(hsearch, "pF?u")
-//GOW(hsearch_r, "iF?up!")
+GOM(hsearch, pFEppu)
+GOWM(hsearch_r, iFEppupp)
 GO(hstrerror, pFi)
 GO(htonl, uFu)
 GO(htons, WFW)

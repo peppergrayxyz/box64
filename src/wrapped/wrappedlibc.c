@@ -2468,6 +2468,20 @@ EXPORT void my_qsort_r(x64emu_t* emu, void* base, size_t nmemb, size_t size, voi
     args.emu = emu; args.f = (uintptr_t)fnc; args.r = 1; args.data = data;
     qsort_r(base, nmemb, size, my_compare_r_cb, &args);
 }
+#if !defined(__ANDROID_API__) || __ANDROID_API__ >= 28
+EXPORT void* my_hsearch(x64emu_t* emu, char* key, void* data, int action)
+{
+    (void)emu;
+    ENTRY item = { key, data };
+    return hsearch(item, action);
+}
+EXPORT int my_hsearch_r(x64emu_t* emu, char* key, void* data, int action, void* retval, void* htab)
+{
+    (void)emu;
+    ENTRY item = { key, data };
+    return hsearch_r(item, action, retval, htab);
+}
+#endif
 EXPORT void* my_bsearch(x64emu_t* emu, void* key, void* base, size_t nmemb, size_t size, void* fnc)
 {
     (void)emu;

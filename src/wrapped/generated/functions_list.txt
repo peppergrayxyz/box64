@@ -5896,6 +5896,8 @@ wrappedlibc:
 - pFpLL:
   - __getcwd_chk
   - reallocarray
+- pFppu:
+  - hsearch
 - pFppp:
   - tdelete
   - tfind
@@ -6001,6 +6003,8 @@ wrappedlibc:
   - __sprintf_chk
 - iFpuppp:
   - __vswprintf_chk
+- iFppupp:
+  - hsearch_r
 - lFippLL:
   - __readlinkat_chk
 - pFpLLiN:
