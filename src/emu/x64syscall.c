@@ -530,6 +530,16 @@ static int clone_fn_syscall(void* arg)
     _exit(ret);
 }
 
+static void clone_args_free(clone_t* args)
+{
+    FreeX64Emu(&args->emu);
+    if(args->stack2free)
+        box_free(args->stack2free);
+    else
+        my_context->stack_clone_used = 0;
+    box_free(args);
+}
+
 void EXPORT x64Syscall(x64emu_t *emu)
 {
     // check if it's a wine process, then filter the syscall (simulate SECCMP)
@@ -796,6 +806,11 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                     }
                     flags&=~CLONE_SETTLS;   // to be handled differently
                     int64_t ret = clone(clone_fn_syscall, (void*)((uintptr_t)mystack+1024*1024), flags, args, R_RDX, NULL, R_R10);
+                    if(ret==-1) {
+                        int e = errno;
+                        clone_args_free(args);
+                        errno = e;
+                    }
                     S_RAX = ret;
                 }
                 else
@@ -1273,6 +1288,11 @@ long EXPORT my_syscall(x64emu_t *emu)
                 // x86_64 raw clone is long clone(unsigned long flags, void *stack, int *parent_tid, int *child_tid, unsigned long tls);
                 flags &= ~CLONE_SETTLS;   // guest TLS is applied to the emulated FS base in clone_fn_syscall
                 long ret = clone(clone_fn_syscall, (void*)((uintptr_t)mystack+1024*1024), flags, args, R_RCX, NULL, R_R8);
+                if(ret==-1) {
+                    int e = errno;
+                    clone_args_free(args);
+                    errno = e;
+                }
                 return ret;
             }
             else
