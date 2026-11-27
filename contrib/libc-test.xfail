@@ -37,7 +37,8 @@ bionic termux-* src/math/tanh.exe
 [!b]* * src/math/fdiml.exe
 [!b]* * src/math/fmal.exe
 [!b]* * src/math/fmodl.exe
-glibc  * src/math/fpclassify.exe
+# (fpclassify passes with the interpreter: *[!p] is not -interp)
+glibc  *[!p] src/math/fpclassify.exe
 [!b]* * src/math/hypotl.exe
 [!b]* * src/math/ilogbl.exe
 [!b]* * src/math/isless.exe
@@ -66,6 +67,20 @@ glibc  * src/math/fpclassify.exe
 [!b]* * src/math/tgammal.exe
 [!b]* * src/regression/fpclassify-invalid-ld80.exe
 [!b]* * src/regression/fpclassify-invalid-ld80-static.exe
+
+# the exact long double operations run in double precision as well: the
+# dynarec compares their results in double, the interpreter with all 80 bits
+[!b]*  *-interp src/math/copysignl.exe
+[!b]*  *-interp src/math/fabsl.exe
+[!b]*  *-interp src/math/frexpl.exe
+[!b]*  *-interp src/math/ldexpl.exe
+musl   *-interp src/math/fmaxl.exe
+musl   *-interp src/math/fminl.exe
+
+# filling the memory takes minutes with the interpreter
+glibc  *-interp src/regression/malloc-oom-static.exe
+glibc  *-interp src/regression/pthread_create-oom-static.exe
+glibc  *-interp src/regression/setenv-oom-static.exe
 
 # musl's own printf, scanf and strtod compute in x87 long double
 musl   * src/functional/snprintf-static.exe

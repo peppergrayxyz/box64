@@ -27,9 +27,10 @@ cmd_build() {
     make -k -j"$(nproc)" $targets > build.log 2>&1 || true
     grep '^BUILDERROR' build.log || true
 
+    # LIBC_TEST_NOSTATIC: drop the static tests
     for t in $(make -s debug | sed -n 's/^BINS //p'); do
         [ -x "$t" ] && echo "$t"
-    done | sort > tests.list
+    done | sort | if [ -n "${LIBC_TEST_NOSTATIC:-}" ]; then grep -v -- '-static\.exe$'; else cat; fi > tests.list
     echo "$(wc -l < tests.list) tests built"
     # e.g. no libtest.a: every test fails to link
     if [ ! -s tests.list ]; then

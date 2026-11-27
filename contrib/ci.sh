@@ -33,14 +33,17 @@ Build and test box64 in a container, locally or in CI.
                 fetch and build musl's libc-test in LIBC_TEST_DIR (default:
                 libc-test-<distro>-<libc>-<toolchain>), then run it natively
                 for the baseline. LIBC_TEST_REV: the libc-test commit to fetch
-                (default: master), an existing LIBC_TEST_DIR is reused
+                (default: master), an existing LIBC_TEST_DIR is reused.
+                LIBC_TEST_ARCH=i386: a 32-bit glibc guest, for Box32 (ubuntu
+                glibc gcc, no static tests)
 
   libc-test run <dir>
                 run the libc-test of <dir> (built by "libc-test build", maybe
                 for another libc) with box64, fail on tests that pass in the
                 baseline but not with box64, unless contrib/libc-test.xfail
                 lists them (LIBC_TEST_TIMEOUT: per test, 10s; LIBC_TEST_XFAIL:
-                another list, empty for none)
+                another list, empty for none). BOX64_DYNAREC=0 runs the
+                interpreter, the host tag gets -interp
 
   libc-test fetch [run]
                 download the libc-test of <libc> that CI built and ran natively on
@@ -106,7 +109,11 @@ repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 image=box64-$distro-$libc-$toolchain:$arch
 build_dir=${BUILD_DIR:-build-$distro-$libc-$toolchain-$arch}
 box32=${BOX32:-OFF}
-libc_test_dir=${LIBC_TEST_DIR:-libc-test-$distro-$libc-$toolchain}
+# i386: the libc-test of a 32-bit glibc guest, built with gcc -m32 (Box32)
+libc_test_arch=${LIBC_TEST_ARCH:-x86_64}
+libc_test_guest=$libc
+if [ "$libc_test_arch" = i386 ]; then libc_test_guest=$libc-i386; fi
+libc_test_dir=${LIBC_TEST_DIR:-libc-test-$distro-$libc_test_guest-$toolchain}
 
 # --- install, run by the Dockerfiles ----------------------------------------
 
@@ -183,6 +190,11 @@ install_ubuntu() {
     packages+=(libcrypt-dev)
 
     export DEBIAN_FRONTEND=noninteractive
+    # the i386 libc-test guest (LIBC_TEST_ARCH=i386)
+    if [ "$arch/$toolchain" = x86_64/gcc ]; then
+        dpkg --add-architecture i386
+        packages+=(gcc-multilib libcrypt-dev:i386)
+    fi
     apt-get update
     apt-get install -y --no-install-recommends "${packages[@]}"
     rm -rf /var/lib/apt/lists/*
@@ -333,10 +345,17 @@ libc_test_rev=${LIBC_TEST_REV:-master}
 libc_test=(env "LIBC_TEST_TIMEOUT=${LIBC_TEST_TIMEOUT:-}" sh contrib/libc-test.sh)
 
 cmd_libc_test_build() {
-    local dir=$libc_test_dir cc=${toolchain/llvm/clang} ar=ar ranlib=ranlib
+    local dir=$libc_test_dir cc=${toolchain/llvm/clang} ar=ar ranlib=ranlib nostatic=
     if [ "$arch" != x86_64 ] || $cross; then
         error "libc-test build: the tests are x86_64 binaries, run natively for the baseline"
     fi
+    case $libc_test_arch in
+        x86_64) ;;
+        # Box32 cannot run static binaries
+        i386) [ "$libc/$toolchain" = glibc/gcc ] || error "libc-test build: i386 is glibc gcc only"
+              cc+=" -m32" nostatic=1 ;;
+        *) error "libc-test build: unsupported LIBC_TEST_ARCH $libc_test_arch" ;;
+    esac
     if [ "$toolchain" = llvm ]; then
         cc+=" -fuse-ld=lld -rtlib=compiler-rt"
         # no binutils in the llvm images, and alpine has no llvm-ranlib in PATH
@@ -352,7 +371,7 @@ cmd_libc_test_build() {
             sh "$libc_test_repo" "$libc_test_rev" "$dir"
     fi
     info "building libc-test $(cat "$repo/$dir/REVISION" 2>/dev/null || echo "(unknown revision)") in $dir"
-    docker_run env CC="$cc" AR="$ar" RANLIB="$ranlib" "${libc_test[@]}" build "$dir"
+    docker_run env CC="$cc" AR="$ar" RANLIB="$ranlib" LIBC_TEST_NOSTATIC="$nostatic" "${libc_test[@]}" build "$dir"
     if [ "$libc" = glibc ]; then
         # static glibc tests need a C.UTF-8 locale, and the host may have none (libc-test.sh sets LOCPATH)
         # shellcheck disable=SC2016
@@ -361,12 +380,14 @@ cmd_libc_test_build() {
     info "running libc-test natively, for the baseline"
     docker_run "${libc_test[@]}" run "$dir" "$dir/baseline.txt"
     # the guest of contrib/libc-test.xfail
-    echo "$libc" > "$repo/$dir/LIBC"
+    echo "$libc_test_guest" > "$repo/$dir/LIBC"
 }
 
 cmd_libc_test_run() {
     [ $# -eq 1 ] || usage
-    local dir=$1 tag=$distro-$libc-$toolchain-$arch qemu=() guest xfail=()
+    local dir=$1 tag=$distro-$libc-$toolchain-$arch qemu=() guest xfail=() env=(BOX64_NOBANNER=1 BOX64_LOG=0)
+    # BOX64_DYNAREC=0: the interpreter, the host tag gets -interp
+    if [ "${BOX64_DYNAREC:-}" = 0 ]; then tag+=-interp; env+=(BOX64_DYNAREC=0); fi
     [ -f "$repo/$dir/baseline.txt" ] || error "no $dir/baseline.txt, run \"libc-test build\" first"
     guest=$(cat "$repo/$dir/LIBC" 2>/dev/null) || error "no $dir/LIBC, run \"libc-test build\" again"
     if [ -n "${LIBC_TEST_XFAIL-contrib/libc-test.xfail}" ]; then
@@ -375,7 +396,7 @@ cmd_libc_test_run() {
     if $cross; then qemu=("qemu-$arch"); fi
 
     info "running the libc-test of $dir with box64 ($build_dir)"
-    docker_run env BOX64_NOBANNER=1 BOX64_LOG=0 "${libc_test[@]}" run "$dir" "$dir/box64-$tag.txt" \
+    docker_run env "${env[@]}" "${libc_test[@]}" run "$dir" "$dir/box64-$tag.txt" \
         "${qemu[@]}" "/src/$build_dir/box64"
     info "comparing with the baseline ($guest guest, $tag host)"
     docker_run "${libc_test[@]}" compare "$dir/baseline.txt" "$dir/box64-$tag.txt" "${xfail[@]}" |
@@ -413,10 +434,10 @@ cmd_libc_test_fetch() {
         [ -n "$run" ] || error "libc-test fetch: no successful libc-test run on this branch, give a run id"
     fi
     tmp=$(mktemp -d)
-    info "fetching the $libc libc-test of $GH_REPO run $run into $dir"
-    gh run download "$run" --name "libc-test-guest-$libc" --dir "$tmp" &&
-        tar xzf "$tmp/libc-test-$libc.tar.gz" -C "$tmp" &&
-        mv "$tmp/libc-test-$libc" "$repo/$dir" || { rm -rf "$tmp"; error "libc-test fetch: failed"; }
+    info "fetching the $libc_test_guest libc-test of $GH_REPO run $run into $dir"
+    gh run download "$run" --name "libc-test-guest-$libc_test_guest" --dir "$tmp" &&
+        tar xzf "$tmp/libc-test-$libc_test_guest.tar.gz" -C "$tmp" &&
+        mv "$tmp/libc-test-$libc_test_guest" "$repo/$dir" || { rm -rf "$tmp"; error "libc-test fetch: failed"; }
     rm -rf "$tmp"
 }
 

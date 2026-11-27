@@ -45,19 +45,21 @@ defaults:
 
 jobs:
   guest:
-    name: ${{ matrix.libc }}-${{ matrix.toolchain }} guest
+    name: ${{ matrix.guest }}-${{ matrix.toolchain }} guest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { distro: ubuntu, libc: glibc, toolchain: gcc }
-          - { distro: alpine, libc: musl, toolchain: llvm }
-          - { distro: termux, libc: bionic, toolchain: llvm }
+          - { guest: glibc, distro: ubuntu, libc: glibc, toolchain: gcc, arch: x86_64 }
+          - { guest: glibc-i386, distro: ubuntu, libc: glibc, toolchain: gcc, arch: i386 }
+          - { guest: musl, distro: alpine, libc: musl, toolchain: llvm, arch: x86_64 }
+          - { guest: bionic, distro: termux, libc: bionic, toolchain: llvm, arch: x86_64 }
 
     runs-on: ubuntu-latest
     env:
       CI_SH: contrib/ci.sh ${{ matrix.distro }} x86_64 ${{ matrix.libc }} ${{ matrix.toolchain }}
-      LIBC_TEST_DIR: libc-test-${{ matrix.libc }}
+      LIBC_TEST_DIR: libc-test-${{ matrix.guest }}
+      LIBC_TEST_ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v7
 
@@ -72,8 +74,8 @@ jobs:
         id: cache
         uses: actions/cache@v6
         with:
-          path: libc-test-${{ matrix.libc }}.tar.gz
-          key: libc-test-${{ env.LIBC_TEST_REV }}-${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-x86_64-${{ hashFiles('contrib/ci.sh', 'contrib/libc-test.sh', format('.github/docker/{0}.Dockerfile', matrix.distro)) }}
+          path: libc-test-${{ matrix.guest }}.tar.gz
+          key: libc-test-${{ env.LIBC_TEST_REV }}-${{ matrix.distro }}-${{ matrix.guest }}-${{ matrix.toolchain }}-x86_64-${{ hashFiles('contrib/ci.sh', 'contrib/libc-test.sh', format('.github/docker/{0}.Dockerfile', matrix.distro)) }}
 
       - uses: docker/setup-buildx-action@v4
         if: steps.cache.outputs.cache-hit != 'true'
@@ -102,8 +104,8 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: libc-test-guest-${{ matrix.libc }}
-          path: libc-test-${{ matrix.libc }}.tar.gz
+          name: libc-test-guest-${{ matrix.guest }}
+          path: libc-test-${{ matrix.guest }}.tar.gz
           retention-days: 7
 
   host:
@@ -112,16 +114,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # interp: the guest also run with the interpreter
         include:
-          - { distro: ubuntu, libc: glibc, toolchain: gcc, guests: glibc musl }
-          - { distro: alpine, libc: musl, toolchain: llvm, guests: glibc musl }
-          - { distro: termux, libc: bionic, toolchain: llvm, guests: bionic, experimental: true }
+          - { distro: ubuntu, libc: glibc, toolchain: gcc, guests: glibc musl glibc-i386, interp: glibc, box32: ON }
+          - { distro: alpine, libc: musl, toolchain: llvm, guests: glibc musl glibc-i386, interp: musl, box32: ON }
+          - { distro: termux, libc: bionic, toolchain: llvm, guests: bionic, interp: bionic, box32: OFF, experimental: true }
 
     runs-on: ubuntu-24.04-arm
     continue-on-error: ${{ matrix.experimental == true }}
     env:
       CI_SH: contrib/ci.sh ${{ matrix.distro }} aarch64 ${{ matrix.libc }} ${{ matrix.toolchain }}
       BUILD_DIR: build
+      BOX32: ${{ matrix.box32 }}
     steps:
       - uses: actions/checkout@v7
 
@@ -168,6 +172,20 @@ jobs:
       - name: "Run libc-test with Box64 (bionic guest)"
         if: ${{ !cancelled() && steps.build.outcome == 'success' && contains(matrix.guests, 'bionic') }}
         run: $CI_SH libc-test run libc-test-bionic
+
+      # not blocking until contrib/libc-test.xfail covers the i386 guest
+      - name: "Run libc-test with Box32 (glibc-i386 guest)"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && contains(matrix.guests, 'glibc-i386') }}
+        continue-on-error: true
+        run: $CI_SH libc-test run libc-test-glibc-i386
+
+      # slower: a longer timeout
+      - name: "Run libc-test with the interpreter (${{ matrix.interp }} guest)"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          BOX64_DYNAREC: 0
+          LIBC_TEST_TIMEOUT: 30
+        run: $CI_SH libc-test run libc-test-${{ matrix.interp }}
 
       - name: "Summary"
         if: always()
