@@ -6,6 +6,7 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "wrappedlibs.h"
 
@@ -60,6 +61,23 @@ EXPORT void my___pthread_initialize()
 {
     // nothing, the lib initialize itself now
 }
+
+#ifdef __GLIBC__
+// musl's sem_t is only 4-byte aligned, glibc's uses 64-bit atomics on its first 16 bytes
+#define NATIVE_SEM(s) ((sem_t*)(((uintptr_t)(s)+7)&~(uintptr_t)7))
+#else
+#define NATIVE_SEM(s) (s)
+#endif
+EXPORT int my_sem_init(x64emu_t* emu, sem_t* sem, int pshared, uint32_t value) { return sem_init(NATIVE_SEM(sem), pshared, value); }
+EXPORT int my_sem_destroy(x64emu_t* emu, sem_t* sem) { return sem_destroy(NATIVE_SEM(sem)); }
+EXPORT int my_sem_getvalue(x64emu_t* emu, sem_t* sem, int* value) { return sem_getvalue(NATIVE_SEM(sem), value); }
+EXPORT int my_sem_post(x64emu_t* emu, sem_t* sem) { return sem_post(NATIVE_SEM(sem)); }
+EXPORT int my_sem_wait(x64emu_t* emu, sem_t* sem) { return sem_wait(NATIVE_SEM(sem)); }
+EXPORT int my_sem_trywait(x64emu_t* emu, sem_t* sem) { return sem_trywait(NATIVE_SEM(sem)); }
+EXPORT int my_sem_timedwait(x64emu_t* emu, sem_t* sem, const struct timespec* t) { return sem_timedwait(NATIVE_SEM(sem), t); }
+#ifdef HAVE_SEM_CLOCKWAIT
+EXPORT int my_sem_clockwait(x64emu_t* emu, sem_t* sem, clockid_t clock, const struct timespec* t) { return sem_clockwait(NATIVE_SEM(sem), clock, t); }
+#endif
 
 #ifdef STATICBUILD
 #include <semaphore.h>

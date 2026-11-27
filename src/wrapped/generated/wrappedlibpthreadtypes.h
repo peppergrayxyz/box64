@@ -21,6 +21,8 @@ typedef int32_t (*iFpi_t)(void*, int32_t);
 typedef int32_t (*iFpL_t)(void*, uintptr_t);
 typedef int32_t (*iFpp_t)(void*, void*);
 typedef void (*vFppp_t)(void*, void*, void*);
+typedef int32_t (*iFpiu_t)(void*, int32_t, uint32_t);
+typedef int32_t (*iFpip_t)(void*, int32_t, void*);
 typedef int32_t (*iFpLp_t)(void*, uintptr_t, void*);
 typedef int32_t (*iFppu_t)(void*, void*, uint32_t);
 typedef int32_t (*iFppL_t)(void*, void*, uintptr_t);
@@ -52,6 +54,10 @@ typedef int32_t (*iFpppp_t)(void*, void*, void*, void*);
 	GO(pthread_mutexattr_destroy, iFp_t) \
 	GO(pthread_mutexattr_init, iFp_t) \
 	GO(pthread_setattr_default_np, iFp_t) \
+	GO(sem_destroy, iFp_t) \
+	GO(sem_post, iFp_t) \
+	GO(sem_trywait, iFp_t) \
+	GO(sem_wait, iFp_t) \
 	GO(__pthread_cleanup_pop, vFpi_t) \
 	GO(_pthread_cleanup_pop, vFpi_t) \
 	GO(_pthread_cleanup_pop_restore, vFpi_t) \
@@ -105,9 +111,13 @@ typedef int32_t (*iFpppp_t)(void*, void*, void*, void*);
 	GO(pthread_mutexattr_gettype, iFpp_t) \
 	GO(pthread_once, iFpp_t) \
 	GO(pthread_setaffinity_np@GLIBC_2.3.3, iFpp_t) \
+	GO(sem_getvalue, iFpp_t) \
+	GO(sem_timedwait, iFpp_t) \
 	GO(__pthread_cleanup_push, vFppp_t) \
 	GO(_pthread_cleanup_push, vFppp_t) \
 	GO(_pthread_cleanup_push_defer, vFppp_t) \
+	GO(sem_init, iFpiu_t) \
+	GO(sem_clockwait, iFpip_t) \
 	GO(pthread_attr_getaffinity_np, iFpLp_t) \
 	GO(pthread_attr_setaffinity_np, iFpLp_t) \
 	GO(pthread_getaffinity_np, iFpLp_t) \

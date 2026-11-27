@@ -35,6 +35,7 @@ set(PROJECT_SYMBOL_CHECKS
     pthread_attr_setaffinity_np         pthread.h
     pthread_mutexattr_setprioceiling    pthread.h
     pthread_mutex_clocklock             pthread.h
+    sem_clockwait                       semaphore.h
     dlvsym                              dlfcn.h
     obstack_vprintf                     stdio.h
     getprotobyname_r                    netdb.h

@@ -1177,6 +1177,7 @@
 #() iFEupu
 #() iFEupp
 #() iFEpii
+#() iFEpiu
 #() iFEpip
 #() iFEpiV
 #() iFEpui
@@ -6573,6 +6574,10 @@ wrappedlibpthread:
   - pthread_mutexattr_destroy
   - pthread_mutexattr_init
   - pthread_setattr_default_np
+  - sem_destroy
+  - sem_post
+  - sem_trywait
+  - sem_wait
 - vFpi:
   - __pthread_cleanup_pop
   - _pthread_cleanup_pop
@@ -6630,10 +6635,16 @@ wrappedlibpthread:
   - pthread_mutexattr_gettype
   - pthread_once
   - pthread_setaffinity_np@GLIBC_2.3.3
+  - sem_getvalue
+  - sem_timedwait
 - vFppp:
   - __pthread_cleanup_push
   - _pthread_cleanup_push
   - _pthread_cleanup_push_defer
+- iFpiu:
+  - sem_init
+- iFpip:
+  - sem_clockwait
 - iFpLp:
   - pthread_attr_getaffinity_np
   - pthread_attr_setaffinity_np
