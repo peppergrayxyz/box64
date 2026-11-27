@@ -117,6 +117,7 @@ typedef intptr_t (*lFippL_t)(int32_t, void*, void*, uintptr_t);
 typedef intptr_t (*lFuipp_t)(uint32_t, int32_t, void*, void*);
 typedef intptr_t (*lFppiS_t)(void*, void*, int32_t, void*);
 typedef intptr_t (*lFppLL_t)(void*, void*, uintptr_t, uintptr_t);
+typedef uintptr_t (*LFippL_t)(int32_t, void*, void*, uintptr_t);
 typedef void (*vFpiipV_t)(void*, int32_t, int32_t, void*, ...);
 typedef void (*vFpLLpp_t)(void*, uintptr_t, uintptr_t, void*, void*);
 typedef int32_t (*iFiipup_t)(int32_t, int32_t, void*, uint32_t, void*);
@@ -133,6 +134,7 @@ typedef int32_t (*iFpiipp_t)(void*, int32_t, int32_t, void*, void*);
 typedef int32_t (*iFpilpV_t)(void*, int32_t, intptr_t, void*, ...);
 typedef int32_t (*iFpuppp_t)(void*, uint32_t, void*, void*, void*);
 typedef int32_t (*iFppupp_t)(void*, void*, uint32_t, void*, void*);
+typedef int32_t (*iFppLpi_t)(void*, void*, uintptr_t, void*, int32_t);
 typedef intptr_t (*lFippLL_t)(int32_t, void*, void*, uintptr_t, uintptr_t);
 typedef void* (*pFpLLiN_t)(void*, uintptr_t, uintptr_t, int32_t, ...);
 typedef void* (*pFppLLp_t)(void*, void*, uintptr_t, uintptr_t, void*);
@@ -169,6 +171,7 @@ typedef double (*DFD_t)(double);
 	GO(cfree, vFp_t) \
 	GO(cnd_destroy, vFp_t) \
 	GO(free, vFp_t) \
+	GO(regfree, vFp_t) \
 	GO(__getpagesize, iFv_t) \
 	GO(clearenv, iFv_t) \
 	GO(fork, iFv_t) \
@@ -367,6 +370,7 @@ typedef double (*DFD_t)(double);
 	GO(fts_set, iFppi_t) \
 	GO(ftw, iFppi_t) \
 	GO(ftw64, iFppi_t) \
+	GO(regcomp, iFppi_t) \
 	GO(setenv, iFppi_t) \
 	GO(__cxa_atexit, iFppp_t) \
 	GO(__cxa_thread_atexit_impl, iFppp_t) \
@@ -467,6 +471,7 @@ typedef double (*DFD_t)(double);
 	GO(__getdelim, lFppiS_t) \
 	GO(getdelim, lFppiS_t) \
 	GO(__readlink_chk, lFppLL_t) \
+	GO(regerror, LFippL_t) \
 	GO(argp_failure, vFpiipV_t) \
 	GO(qsort_r, vFpLLpp_t) \
 	GO(__xmknodat, iFiipup_t) \
@@ -487,6 +492,7 @@ typedef double (*DFD_t)(double);
 	GO(__sprintf_chk, iFpilpV_t) \
 	GO(__vswprintf_chk, iFpuppp_t) \
 	GO(hsearch_r, iFppupp_t) \
+	GO(regexec, iFppLpi_t) \
 	GO(__readlinkat_chk, lFippLL_t) \
 	GO(mremap, pFpLLiN_t) \
 	GO(bsearch, pFppLLp_t) \

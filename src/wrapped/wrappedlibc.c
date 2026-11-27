@@ -5192,6 +5192,86 @@ EXPORT void my_mcount(void* frompc, void* selfpc)
 }
 #endif
 
+#include <regex.h>
+// with the other libc on the host, the guest's regex_t holds a pointer to the native one
+static int regex_convert(void)
+{
+    #if defined(ANDROID)
+    return 0;
+    #elif defined(__GLIBC__)
+    return box64_musl;
+    #else
+    return !box64_musl;
+    #endif
+}
+static size_t* guest_re_nsub(void* preg) { return box64_musl ? (size_t*)preg : (size_t*)((uintptr_t)preg+48); }
+static regex_t** guest_re_native(void* preg) { return box64_musl ? (regex_t**)((uintptr_t)preg+8) : (regex_t**)preg; }
+
+EXPORT int my_regcomp(void* preg, const char* regex, int cflags)
+{
+    if(!regex_convert())
+        return regcomp(preg, regex, cflags);
+    regex_t* re = box_malloc(sizeof(regex_t));
+    int ret = regcomp(re, regex, cflags);
+    if(ret) {
+        box_free(re);
+        return ret;
+    }
+    *guest_re_nsub(preg) = re->re_nsub;
+    *guest_re_native(preg) = re;
+    return 0;
+}
+
+EXPORT int my_regexec(void* preg, const char* string, size_t nmatch, void* pmatch, int eflags)
+{
+    if(!regex_convert())
+        return regexec(preg, string, nmatch, pmatch, eflags);
+    regex_t* re = *guest_re_native(preg);
+    if(!pmatch)
+        nmatch = 0;
+    regmatch_t local[16];
+    regmatch_t* m = (nmatch>16) ? box_malloc(nmatch*sizeof(regmatch_t)) : local;
+    for(size_t i=0; i<nmatch; ++i)
+        if(box64_musl) {
+            m[i].rm_so = ((int64_t*)pmatch)[i*2];
+            m[i].rm_eo = ((int64_t*)pmatch)[i*2+1];
+        } else {
+            m[i].rm_so = ((int32_t*)pmatch)[i*2];
+            m[i].rm_eo = ((int32_t*)pmatch)[i*2+1];
+        }
+    int ret = regexec(re, string, nmatch, nmatch?m:NULL, eflags);
+    if(!ret)
+        for(size_t i=0; i<nmatch; ++i)
+            if(box64_musl) {
+                ((int64_t*)pmatch)[i*2] = m[i].rm_so;
+                ((int64_t*)pmatch)[i*2+1] = m[i].rm_eo;
+            } else {
+                ((int32_t*)pmatch)[i*2] = m[i].rm_so;
+                ((int32_t*)pmatch)[i*2+1] = m[i].rm_eo;
+            }
+    if(m!=local)
+        box_free(m);
+    return ret;
+}
+
+EXPORT size_t my_regerror(int errcode, void* preg, char* errbuf, size_t errbuf_size)
+{
+    if(regex_convert() && preg)
+        preg = *guest_re_native(preg);
+    return regerror(errcode, preg, errbuf, errbuf_size);
+}
+
+EXPORT void my_regfree(void* preg)
+{
+    if(!regex_convert()) {
+        regfree(preg);
+        return;
+    }
+    regex_t* re = *guest_re_native(preg);
+    regfree(re);
+    box_free(re);
+}
+
 #ifndef ANDROID
 union semun {
   int              val;    /* Value for SETVAL */

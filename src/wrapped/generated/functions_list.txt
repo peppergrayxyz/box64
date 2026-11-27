@@ -5594,6 +5594,7 @@ wrappedlibc:
   - cfree
   - cnd_destroy
   - free
+  - regfree
 - iFv:
   - __getpagesize
   - clearenv
@@ -5854,6 +5855,7 @@ wrappedlibc:
   - fts_set
   - ftw
   - ftw64
+  - regcomp
   - setenv
 - iFppp:
   - __cxa_atexit
@@ -5995,6 +5997,8 @@ wrappedlibc:
   - getdelim
 - lFppLL:
   - __readlink_chk
+- LFippL:
+  - regerror
 - vFpiipV:
   - argp_failure
 - vFpLLpp:
@@ -6031,6 +6035,8 @@ wrappedlibc:
   - __vswprintf_chk
 - iFppupp:
   - hsearch_r
+- iFppLpi:
+  - regexec
 - lFippLL:
   - __readlinkat_chk
 - pFpLLiN:
