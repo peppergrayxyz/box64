@@ -42,6 +42,14 @@ Build and test box64 in a container, locally or in CI.
                 lists them (LIBC_TEST_TIMEOUT: per test, 10s; LIBC_TEST_XFAIL:
                 another list, empty for none)
 
+  libc-test fetch [run]
+                download the libc-test of <libc> that CI built and ran natively on
+                x86_64, from a run of libc-test.yml (default: the last successful
+                one of this branch), into LIBC_TEST_DIR. Needs the GitHub CLI (gh).
+                A baseline run under qemu differs from a native one, use this
+                one to compare with CI. GH_REPO: the repository (default: the one
+                the branch is pushed to)
+
   libc-test rev print the commit LIBC_TEST_REV is at upstream (no container)
 
   install       install the image's packages (used by the dockerfiles)
@@ -50,6 +58,7 @@ e.g.  $0 alpine riscv64 musl llvm image
       BOX32=ON $0 alpine riscv64 musl llvm build
       $0 gentoo x86_64 glibc gcc libc-test build
       $0 alpine aarch64 musl gcc libc-test run libc-test-gentoo-glibc-gcc
+      $0 ubuntu x86_64 glibc gcc libc-test fetch
 EOF
     exit 2
 }
@@ -84,7 +93,8 @@ if [ "$distro" = termux ]; then cmake_flags+=" -DTERMUX=ON"; fi
 
 # a foreign arch (in "install": foreign to the image) is cross-compiled
 cross=false
-if [ "$arch" != "$(uname -m)" ]; then
+# libc-test fetch and rev run no image
+if [ "$arch" != "$(uname -m)" ] && [ "$command ${1:-}" != "libc-test fetch" ] && [ "$command ${1:-}" != "libc-test rev" ]; then
     cross=true
     case $distro/$libc/$toolchain in
         alpine/musl/llvm) ;;
@@ -379,10 +389,37 @@ cmd_libc_test_rev() {
     echo "$rev"
 }
 
+# runs on the host
+cmd_libc_test_fetch() {
+    [ $# -le 1 ] || usage
+    local run=${1:-} dir=$libc_test_dir tmp branch remote
+    command -v gh > /dev/null || error "libc-test fetch: needs the GitHub CLI (gh)"
+    [ ! -e "$repo/$dir" ] || error "libc-test fetch: $dir exists, remove it or set LIBC_TEST_DIR"
+    branch=$(git -C "$repo" branch --show-current)
+    # GH_REPO (read by gh): default to the repository the branch is pushed to
+    if [ -z "${GH_REPO:-}" ]; then
+        remote=$(git -C "$repo" config "branch.$branch.remote" || echo origin)
+        GH_REPO=$(git -C "$repo" remote get-url "$remote" | sed -E 's#^(git@|https?://)github\.com[:/]##; s#\.git$##')
+        export GH_REPO
+    fi
+    if [ -z "$run" ]; then
+        run=$(gh run list --workflow libc-test.yml --branch "$branch" \
+              --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+        [ -n "$run" ] || error "libc-test fetch: no successful libc-test run on this branch, give a run id"
+    fi
+    tmp=$(mktemp -d)
+    info "fetching the $libc libc-test of $GH_REPO run $run into $dir"
+    gh run download "$run" --name "libc-test-guest-$libc" --dir "$tmp" &&
+        tar xzf "$tmp/libc-test-$libc.tar.gz" -C "$tmp" &&
+        mv "$tmp/libc-test-$libc" "$repo/$dir" || { rm -rf "$tmp"; error "libc-test fetch: failed"; }
+    rm -rf "$tmp"
+}
+
 cmd_libc_test() {
     case ${1:-} in
         build) cmd_libc_test_build ;;
         run)   shift; cmd_libc_test_run "$@" ;;
+        fetch) shift; cmd_libc_test_fetch "$@" ;;
         rev)   cmd_libc_test_rev ;;
         *)     usage ;;
     esac
