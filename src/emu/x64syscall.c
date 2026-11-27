@@ -9,6 +9,7 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/types.h>
@@ -151,6 +152,9 @@ static const scwrap_t syscallwrap[] = {
     #endif
     [35] = {__NR_nanosleep, 2},
     [36] = {__NR_getitimer, 2},
+    #ifdef __NR_alarm
+    [37] = {__NR_alarm, 1},
+    #endif
     [38] = {__NR_setitimer, 3},
     [39] = {__NR_getpid, 0},
     [40] = {__NR_sendfile, 4},
@@ -208,6 +212,12 @@ static const scwrap_t syscallwrap[] = {
     #ifdef __NR_rmdir
     [84] = {__NR_rmdir, 1},
     #endif
+    #ifdef __NR_creat
+    [85] = {__NR_creat, 2},
+    #endif
+    #ifdef __NR_link
+    [86] = {__NR_link, 2},
+    #endif
     #ifdef __NR_unlink
     [87] = {__NR_unlink, 1},
     #endif
@@ -219,7 +229,13 @@ static const scwrap_t syscallwrap[] = {
     [90] = {__NR_chmod, 2},
     #endif
     [91] = {__NR_fchmod, 2},
+    #ifdef __NR_chown
+    [92] = {__NR_chown, 3},
+    #endif
     [93] = {__NR_fchown, 3},
+    #ifdef __NR_lchown
+    [94] = {__NR_lchown, 3},
+    #endif
     [95] = {__NR_umask, 1},
     [96] = {__NR_gettimeofday, 2},
     #ifdef __NR_getrlimit
@@ -258,6 +274,9 @@ static const scwrap_t syscallwrap[] = {
     [127] = {__NR_rt_sigpending, 2},
     [128] = {__NR_rt_sigtimedwait, 4},
     //[131] = {__NR_sigaltstack, 2},  // wrapped to use my_sigaltstack*
+    #ifdef __NR_utime
+    [132] = {__NR_utime, 2},
+    #endif
     #ifdef __NR_mknod
     [133] = {__NR_mknod, 3},
     #endif
@@ -318,6 +337,9 @@ static const scwrap_t syscallwrap[] = {
     [233] = {__NR_epoll_ctl, 4},
     #endif
     [234] = {__NR_tgkill, 3},
+    #ifdef __NR_utimes
+    [235] = {__NR_utimes, 2},
+    #endif
     [237] = {__NR_mbind, 6},
     [238] = {__NR_set_mempolicy, 3},
     [239] = {__NR_get_mempolicy, 5},
@@ -334,6 +356,9 @@ static const scwrap_t syscallwrap[] = {
     #endif
     [258] = {__NR_mkdirat, 3},
     [260] = {__NR_fchownat, 5},
+    #ifdef __NR_futimesat
+    [261] = {__NR_futimesat, 3},
+    #endif
     //[262] = {__NR_fstatat, 4},
     [263] = {__NR_unlinkat, 3},
     #ifdef __NR_renameat
@@ -524,6 +549,32 @@ typedef struct clone_s {
     void* tls;
     int set_tls;
 } clone_t;
+
+#if !defined(__NR_utime) || !defined(__NR_utimes) || !defined(__NR_futimesat)
+#ifndef AT_FDCWD
+#define AT_FDCWD -100
+#endif
+static int utimes_at(int dirfd, const char* path, const struct timeval* tv)
+{
+    struct timespec ts[2];
+    for(int i=0; tv && i<2; ++i) {
+        ts[i].tv_sec = tv[i].tv_sec;
+        ts[i].tv_nsec = tv[i].tv_usec*1000;
+    }
+    return syscall(__NR_utimensat, dirfd, path, tv?ts:NULL, 0);
+}
+#endif
+#ifndef __NR_utime
+static int utime_at(const char* path, const uintptr_t* times)
+{
+    struct timeval tv[2] = {0};
+    if(times) {
+        tv[0].tv_sec = times[0];
+        tv[1].tv_sec = times[1];
+    }
+    return utimes_at(AT_FDCWD, path, times?tv:NULL);
+}
+#endif
 
 static int clone_fn_syscall(void* arg)
 {
@@ -947,6 +998,20 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                 S_RAX = -errno;
         break;
         #endif
+        #ifndef __NR_creat
+        case 85: // sys_creat
+            S_RAX = my_open(emu, (void*)R_RDI, of_convert(01101), R_ESI);   // x86 O_WRONLY|O_CREAT|O_TRUNC
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_link
+        case 86: // sys_link
+            S_RAX = link((void*)R_RDI, (void*)R_RSI);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
         #ifndef __NR_unlink
         case 87: //sys_unlink
             S_RAX = unlink((void*)R_RDI);
@@ -969,6 +1034,46 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
         #ifndef __NR_chmod
         case 90:
             S_RAX = chmod((void*)R_RDI, R_ESI);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_chown
+        case 92: // sys_chown
+            S_RAX = chown((void*)R_RDI, R_ESI, R_EDX);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_lchown
+        case 94: // sys_lchown
+            S_RAX = lchown((void*)R_RDI, R_ESI, R_EDX);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_alarm
+        case 37: // sys_alarm
+            S_RAX = alarm(R_EDI);
+            break;
+        #endif
+        #ifndef __NR_utime
+        case 132: // sys_utime
+            S_RAX = utime_at((void*)R_RDI, (void*)R_RSI);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_utimes
+        case 235: // sys_utimes
+            S_RAX = utimes_at(AT_FDCWD, (void*)R_RDI, (void*)R_RSI);
+            if(S_RAX==-1)
+                S_RAX = -errno;
+            break;
+        #endif
+        #ifndef __NR_futimesat
+        case 261: // sys_futimesat
+            S_RAX = utimes_at(S_EDI, (void*)R_RSI, (void*)R_RDX);
             if(S_RAX==-1)
                 S_RAX = -errno;
             break;
@@ -1427,6 +1532,14 @@ long EXPORT my_syscall(x64emu_t *emu)
         case 84: // sys_rmdir
             return rmdir((void*)R_RSI);
         #endif
+        #ifndef __NR_creat
+        case 85: // sys_creat
+            return my_open(emu, (void*)R_RSI, of_convert(01101), R_EDX);   // x86 O_WRONLY|O_CREAT|O_TRUNC
+        #endif
+        #ifndef __NR_link
+        case 86: // sys_link
+            return link((void*)R_RSI, (void*)R_RDX);
+        #endif
         #ifndef __NR_unlink
         case 87: //sys_unlink
             return unlink((void*)R_RSI);
@@ -1440,6 +1553,30 @@ long EXPORT my_syscall(x64emu_t *emu)
         #ifndef __NR_chmod
         case 90:
             return chmod((void*)R_RSI, R_EDX);
+        #endif
+        #ifndef __NR_chown
+        case 92: // sys_chown
+            return chown((void*)R_RSI, R_EDX, R_ECX);
+        #endif
+        #ifndef __NR_lchown
+        case 94: // sys_lchown
+            return lchown((void*)R_RSI, R_EDX, R_ECX);
+        #endif
+        #ifndef __NR_alarm
+        case 37: // sys_alarm
+            return alarm(R_ESI);
+        #endif
+        #ifndef __NR_utime
+        case 132: // sys_utime
+            return utime_at((void*)R_RSI, (void*)R_RDX);
+        #endif
+        #ifndef __NR_utimes
+        case 235: // sys_utimes
+            return utimes_at(AT_FDCWD, (void*)R_RSI, (void*)R_RDX);
+        #endif
+        #ifndef __NR_futimesat
+        case 261: // sys_futimesat
+            return utimes_at(S_ESI, (void*)R_RDX, (void*)R_RCX);
         #endif
         #ifndef __NR_getrlimit
         case 97:
