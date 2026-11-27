@@ -640,7 +640,7 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
     #undef GO
     emu->eflags.x64 = old_eflags;
 
-    if(memcmp(sigcontext, &sigcontext_copy, sizeof(x64_ucontext_t))) {
+    if(memcmp(&sigcontext->uc_mcontext, &sigcontext_copy.uc_mcontext, sizeof(sigcontext->uc_mcontext))) {
         fpu_xrstor_mask(emu, xstate, 0, 0b111);
         emu->df = d_none;
         #if defined(DYNAREC)

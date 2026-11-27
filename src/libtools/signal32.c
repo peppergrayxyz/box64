@@ -740,7 +740,7 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
     GO(EBP);
     #undef GO
 
-    if(memcmp(sigcontext, &sigcontext_copy, sizeof(i386_ucontext_t))) {
+    if(memcmp(&sigcontext->uc_mcontext, &sigcontext_copy.uc_mcontext, sizeof(sigcontext->uc_mcontext))) {
         fpu_xrstor_mask(emu, xstate, 1, 0b111);
         if(emu->jmpbuf) {
             #define GO(R)   emu->regs[_##R].q[0]=sigcontext->uc_mcontext.gregs[I386_E##R]
@@ -802,16 +802,16 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
             #endif
         }
         printf_log(LOG_INFO, "Warning, context has been changed in Sigactionhanlder%s\n", (sigcontext->uc_mcontext.gregs[I386_EIP]!=sigcontext_copy.uc_mcontext.gregs[I386_EIP])?" (EIP changed)":"");
-        if(ucntx)
-            memcpy(&((ucontext_t*)ucntx)->uc_sigmask, &sigcontext->uc_sigmask, sigmask_sz);
+    }
+    if(ucntx)
+        memcpy(&((ucontext_t*)ucntx)->uc_sigmask, &sigcontext->uc_sigmask, sigmask_sz);
+    else {
+        if(sizeof(sigset_t)==sizeof(i386_sigset_t))
+            sigprocmask(SIG_SETMASK, (sigset_t*)&sigcontext->uc_sigmask, NULL);
         else {
-            if(sizeof(sigset_t)==sizeof(i386_sigset_t))
-                sigprocmask(SIG_SETMASK, (sigset_t*)&sigcontext->uc_sigmask, NULL);
-            else {
-                sigset_t tmp = {0};
-                memcpy(&tmp, &sigcontext->uc_sigmask, sigmask_sz);
-                sigprocmask(SIG_SETMASK, &tmp, NULL);
-            }
+            sigset_t tmp = {0};
+            memcpy(&tmp, &sigcontext->uc_sigmask, sigmask_sz);
+            sigprocmask(SIG_SETMASK, &tmp, NULL);
         }
     }
     fpu_xrstor_mask(emu, xstate, 1, 0b111);
