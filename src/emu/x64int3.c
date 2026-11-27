@@ -72,7 +72,10 @@ x64emu_t* x64emu_fork(x64emu_t* emu, int forktype)
         for (int i=0; i<my_context->atfork_sz; ++i)
             if(my_context->atforks[i].child)
                 EmuCall(emu, my_context->atforks[i].child);
+        if(emu->fork_stack)
+            R_RSP = emu->fork_stack;
     }
+    emu->fork_stack = 0;
     R_EAX = v;
     return emu;
 }

@@ -416,6 +416,7 @@ void EXPORT x86Syscall(x64emu_t *emu)
             // so flags=R_EBX, stack=R_ECX, parent_tid=R_EDX, tls=R_ESI, child_tid=R_EDI
             if((R_EBX&~0xff)==0x4100) {
                 // this is a case of vfork...
+                emu->fork_stack = R_ECX;
                 S_RAX = my_vfork(emu);
                 if(S_RAX==-1)
                     S_RAX = -errno;

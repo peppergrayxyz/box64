@@ -133,6 +133,7 @@ typedef struct x64emu_s {
     void*       stack2free; // this is the stack to free (can be NULL)
     void*       init_stack; // initial stack (owned or not)
     uint32_t    size_stack; // stack size (owned or not)
+    uintptr_t   fork_stack; // stack of the child of a clone(CLONE_VFORK)
     JUMPBUFF*   jmpbuf;
     #if defined(RV64) || defined(PPC64LE)
     uintptr_t   old_savedsp;
