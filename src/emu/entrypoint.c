@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+#include <errno.h>
+
 #include "debug.h"
 #include "x64run_private.h"
 #include "box64cpu.h"
@@ -37,6 +39,7 @@ EXPORT int32_t my___libc_start_main(x64emu_t* emu, int (*main) (int, char * *, c
     (void)argc; (void)ubp_av; (void)fini; (void)rtld_fini; (void)stack_end;
 
     guest_alloc_run();
+    errno = 0;
 
     if(my_context->elfs[0]) {
         RunElfPreInit(my_context->elfs[0], emu);
