@@ -401,7 +401,7 @@ void EXPORT x86Syscall(x64emu_t *emu)
             break;
         case 120: // sys_clone
             // x86 raw syscall is long clone(unsigned long flags, void *stack, int *parent_tid, unsigned long tls, int *child_tid);
-            // so flags=R_EBX, stack=R_ECX, parent_tid=R_EDX, child_tid=R_ESI, tls=R_EDI
+            // so flags=R_EBX, stack=R_ECX, parent_tid=R_EDX, tls=R_ESI, child_tid=R_EDI
             if((R_EBX&~0xff)==0x4100) {
                 // this is a case of vfork...
                 S_RAX = my_vfork(emu);
@@ -434,14 +434,14 @@ void EXPORT x86Syscall(x64emu_t *emu)
                     SetupX64Emu(newemu, emu);
                     CloneEmu(newemu, emu);
                     newemu->regs[_SP].q[0] = sp;  // setup new stack pointer
-                    int64_t ret = clone(clone32_fn, (void*)((uintptr_t)mystack+1024*1024), R_EBX, args, R_EDX, R_EDI, R_ESI);
+                    int64_t ret = clone(clone32_fn, (void*)((uintptr_t)mystack+1024*1024), R_EBX, args, R_EDX, R_ESI, R_EDI);
                     S_RAX = ret;
                 }
                 else
                     #ifdef NOALIGN
-                    S_RAX = syscall(__NR_clone, R_EBX, R_ECX, R_EDX, R_ESI, R_EDI);
+                    S_RAX = syscall(__NR_clone, R_EBX, R_ECX, R_EDX, R_EDI, R_ESI);    // x86_64 order: child_tid, then tls
                     #else
-                    S_RAX = syscall(__NR_clone, R_EBX, R_ECX, R_EDX, R_EDI, R_ESI);    // invert R_ESI/R_EDI on Aarch64 and most other
+                    S_RAX = syscall(__NR_clone, R_EBX, R_ECX, R_EDX, R_ESI, R_EDI);    // Aarch64 and most other: same order as i386
                     #endif
                 if(S_RAX==-1)
                     S_RAX = -errno;
