@@ -151,7 +151,7 @@ int32_t EXPORT my32___libc_start_main(x64emu_t* emu, int *(main) (int, char * *,
     DynaRun(emu);
 
     emu->quit = 1; // finished!
-    return 0;
+    return (int)R_EAX;
 }
 #endif
 #endif
