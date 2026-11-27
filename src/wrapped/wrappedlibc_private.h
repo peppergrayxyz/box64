@@ -3059,8 +3059,8 @@ GO(__fpclassifyf, iFf)
 GOW(frexp, dFdp)
 GOW(frexpf, fFfp)
 GOWD(frexpl, DFDp, frexp)
-GOW(gamma, dFd)
-GOW(gammaf, fFf)
+GOWM(gamma, dFd)
+GOWM(gammaf, fFf)
 // __gammaf_r_finite
 // gammal   // Weak
 // __gamma_r_finite
@@ -3100,11 +3100,11 @@ GOD(jnl, DFiD, jn)
 GOW(ldexp, dFdi)
 GOW(ldexpf, fFfi)
 GOWD(ldexpl, DFDi, ldexp)
-GOW(lgamma, dFd)
-GOW(lgammaf, fFf)
+GOWM(lgamma, dFd)
+GOWM(lgammaf, fFf)
 GOW(lgammaf_r, fFfp)
 // __lgammaf_r_finite
-GOWD(lgammal, DFD, lgamma)
+GOWM(lgammal, DFD)
 GOWD(lgammal_r, DFDp, lgamma_r)
 GOW(lgamma_r, dFdp)
 // __lgamma_r_finite

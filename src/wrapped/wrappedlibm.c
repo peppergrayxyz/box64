@@ -16,6 +16,8 @@
 #include "x64emu.h"
 #include "debug.h"
 #include "emu/x64emu_private.h"
+#include "box64context.h"
+#include "symbols.h"
 
 const char* libmName = "libm.so.6";
 #define ALTNAME "libm.so"
@@ -284,6 +286,36 @@ EXPORT long double my_pow10l(long double a) { return exp10l(a);}
 EXPORT double my_pow10l(double a) { return exp10(a);}
 #endif
 #endif
+
+// lgamma sets the native signgam, the guest reads its own copy
+static void set_signgam(int s)
+{
+    static int* copies[2];
+    static int ncopies = -1;
+    if(ncopies<0) {
+        const char* names[] = {"signgam", "__signgam"};
+        int n = 0;
+        for(int i=0; i<2; ++i) {
+            uintptr_t start, end;
+            if(GetSymbolStartEnd(my_context->globdata, names[i], &start, &end, -1, NULL, 1, 1))
+                copies[n++] = (int*)start;
+        }
+        ncopies = n;
+    }
+    signgam = s;
+    for(int i=0; i<ncopies; ++i)
+        *copies[i] = s;
+}
+
+EXPORT double my_lgamma(double x) { int s; double r = lgamma_r(x, &s); set_signgam(s); return r; }
+EXPORT float my_lgammaf(float x) { int s; float r = lgammaf_r(x, &s); set_signgam(s); return r; }
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
+EXPORT long double my_lgammal(long double x) { int s; long double r = lgammal_r(x, &s); set_signgam(s); return r; }
+#else
+EXPORT double my_lgammal(double x) { return my_lgamma(x); }
+#endif
+EXPORT double my_gamma(double x) { return my_lgamma(x); }
+EXPORT float my_gammaf(float x) { return my_lgammaf(x); }
 
 #ifdef STATICBUILD
 //extern void* _LIB_VERSION;

@@ -5630,6 +5630,14 @@ wrappedlibc:
   - _ITM_RU4
 - UFp:
   - _ITM_RU8
+- fFf:
+  - gammaf
+  - lgammaf
+- dFd:
+  - gamma
+  - lgamma
+- DFD:
+  - lgammal
 - lFv:
   - syscall
 - lFi:
@@ -6314,6 +6322,8 @@ wrappedlibm:
   - __logf_finite
   - __sinhf_finite
   - __sqrtf_finite
+  - gammaf
+  - lgammaf
   - nearbyintf
   - pow10f
   - rintf
@@ -6329,10 +6339,13 @@ wrappedlibm:
   - __log_finite
   - __sinh_finite
   - __sqrt_finite
+  - gamma
+  - lgamma
   - nearbyint
   - pow10
   - rint
 - DFD:
+  - lgammal
   - nearbyintl
   - pow10l
 - lFf:

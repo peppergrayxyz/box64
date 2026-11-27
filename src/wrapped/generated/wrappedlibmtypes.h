@@ -62,6 +62,8 @@ typedef double (*DFDD_t)(double, double);
 	GO(__logf_finite, fFf_t) \
 	GO(__sinhf_finite, fFf_t) \
 	GO(__sqrtf_finite, fFf_t) \
+	GO(gammaf, fFf_t) \
+	GO(lgammaf, fFf_t) \
 	GO(nearbyintf, fFf_t) \
 	GO(pow10f, fFf_t) \
 	GO(rintf, fFf_t) \
@@ -76,9 +78,12 @@ typedef double (*DFDD_t)(double, double);
 	GO(__log_finite, dFd_t) \
 	GO(__sinh_finite, dFd_t) \
 	GO(__sqrt_finite, dFd_t) \
+	GO(gamma, dFd_t) \
+	GO(lgamma, dFd_t) \
 	GO(nearbyint, dFd_t) \
 	GO(pow10, dFd_t) \
 	GO(rint, dFd_t) \
+	GO(lgammal, DFD_t) \
 	GO(nearbyintl, DFD_t) \
 	GO(pow10l, DFD_t) \
 	GO(lrintf, lFf_t) \

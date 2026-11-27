@@ -23,6 +23,8 @@ typedef int32_t (*iFp_t)(void*);
 typedef uint8_t (*CFp_t)(void*);
 typedef uint32_t (*uFp_t)(void*);
 typedef uint64_t (*UFp_t)(void*);
+typedef float (*fFf_t)(float);
+typedef double (*dFd_t)(double);
 typedef intptr_t (*lFv_t)(void);
 typedef intptr_t (*lFi_t)(int32_t);
 typedef uintptr_t (*LFL_t)(uintptr_t);
@@ -147,6 +149,12 @@ typedef void* (*pFpLiiil_t)(void*, uintptr_t, int32_t, int32_t, int32_t, intptr_
 typedef int32_t (*iFpippppp_t)(void*, int32_t, void*, void*, void*, void*, void*);
 typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*);
 
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
+typedef long double (*DFD_t)(long double);
+#else // !HAVE_LD80BITS && !ANDROID
+typedef double (*DFD_t)(double);
+#endif
+
 #define SUPER() ADDED_FUNCTIONS() \
 	GO(_Jv_RegisterClasses, vFv_t) \
 	GO(__cxa_pure_virtual, vFv_t) \
@@ -189,6 +197,11 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(_ITM_RU1, CFp_t) \
 	GO(_ITM_RU4, uFp_t) \
 	GO(_ITM_RU8, UFp_t) \
+	GO(gammaf, fFf_t) \
+	GO(lgammaf, fFf_t) \
+	GO(gamma, dFd_t) \
+	GO(lgamma, dFd_t) \
+	GO(lgammal, DFD_t) \
 	GO(syscall, lFv_t) \
 	GO(__sysconf, lFi_t) \
 	GO(sysconf, lFi_t) \
