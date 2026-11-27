@@ -645,7 +645,17 @@ void EXPORT x64Syscall(x64emu_t *emu)
     }
     return x64Syscall_linux(emu);
 }
+
+static void x64Syscall_linux_run(x64emu_t *emu);
 void EXPORT x64Syscall_linux(x64emu_t *emu)
+{
+    uintptr_t old_ret = emu->syscall_ret;
+    emu->syscall_ret = R_RIP;
+    x64Syscall_linux_run(emu);
+    emu->syscall_ret = old_ret;
+}
+
+static void x64Syscall_linux_run(x64emu_t *emu)
 {
     RESET_FLAGS(emu);
     uint32_t s = R_EAX; // EAX? (syscalls only go up to 547 anyways)

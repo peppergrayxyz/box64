@@ -354,6 +354,24 @@ void leave_critical_section()
     emu->deferred_signal_processing = 0;
 }
 
+#ifdef DYNAREC
+// the native pc is on a syscall instruction: the syscall is about to run, or the kernel restarts it
+static int native_at_syscall(void* pc)
+{
+    #if defined(ARM64)
+    return *(uint32_t*)pc == 0xd4000001;    // svc #0
+    #elif defined(RV64)
+    return *(uint32_t*)pc == 0x00000073;    // ecall
+    #elif defined(LA64)
+    return *(uint32_t*)pc == 0x002b0000;    // syscall 0
+    #elif defined(PPC64LE)
+    return *(uint32_t*)pc == 0x44000002;    // sc
+    #else
+    return 0;
+    #endif
+}
+#endif
+
 int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, siginfo_t* info, void * ucntx, int* old_code, void* cur_db, uintptr_t x64pc)
 {
     int Locks = unlockMutex();
@@ -593,6 +611,15 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
     if(sig==3)
         SerializeAllMapping();  // Signal Interupt: it's a good time to serialize the mappings if needed
     #endif
+    // like the kernel, a syscall that is restarted is reported at its instruction
+    uintptr_t syscall_ret = emu->syscall_ret;
+    int at_syscall = 0;
+    #ifdef DYNAREC
+    if(!db && pc && syscall_ret && sigcontext->uc_mcontext.gregs[X64_RIP]==syscall_ret && native_at_syscall(pc)) {
+        sigcontext->uc_mcontext.gregs[X64_RIP] = syscall_ret-2;
+        at_syscall = 1;
+    }
+    #endif
     // call the signal handler
     x64_ucontext_t sigcontext_copy = *sigcontext;
     // save old value from emu
@@ -623,7 +650,11 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
     #endif
     int in_fatal = (sig==X64_SIGSEGV) || (sig==X64_SIGBUS) || (sig==X64_SIGILL) || (sig==X64_SIGFPE);
     if(in_fatal) ++box64_in_fatal_handler;
+    emu->syscall_ret = 0;
     ret = RunFunctionHandler(emu, &exits, dynarec, sigcontext, my_context->signals[info2->si_signo], 3, info2->si_signo, info2, sigcontext);
+    emu->syscall_ret = syscall_ret;
+    if(at_syscall && sigcontext->uc_mcontext.gregs[X64_RIP]==syscall_ret-2)
+        sigcontext->uc_mcontext.gregs[X64_RIP] = sigcontext_copy.uc_mcontext.gregs[X64_RIP] = syscall_ret;
     if(in_fatal && !exits && !emu->quit) --box64_in_fatal_handler;
     if(used_stack)  // release stack
         new_ss->ss_flags = 0;
@@ -680,6 +711,7 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
             dynablock_leave_runtime((dynablock_t*)cur_db);
             #endif
             cancel_deferred_signal_processing(emu);
+            emu->syscall_ret = 0;
             #ifndef __GLIBC__
             // cannot inject sigmask in jumpbuf, as the data is private and format/offset varies with libc and architecture
             sigset_t tmp = {0};
