@@ -199,14 +199,26 @@ static const fenv_t* x86_to_native_fenv(const fenv_t* envp)
     return envp;
 }
 
+// the interpreter rounds with cw and mxcsr, keep them in sync with the native mode
+static void round_to_emu(x64emu_t* emu)
+{
+    int round = FROM_NATIVE(fegetround());
+    emu->cw.x16 = (emu->cw.x16 & ~0xc00) | round;
+    emu->mxcsr.x32 = (emu->mxcsr.x32 & ~0x6000) | (round << 3);
+}
+
 EXPORT int my_fesetenv(x64emu_t* emu, const fenv_t* envp)
 {
-    return fesetenv(x86_to_native_fenv(envp));
+    int ret = fesetenv(x86_to_native_fenv(envp));
+    round_to_emu(emu);
+    return ret;
 }
 
 EXPORT int my_feupdateenv(x64emu_t* emu, const fenv_t* envp)
 {
-    return feupdateenv(x86_to_native_fenv(envp));
+    int ret = feupdateenv(x86_to_native_fenv(envp));
+    round_to_emu(emu);
+    return ret;
 }
 
 // See https://github.com/bminor/glibc/blob/master/sysdeps/x86_64/fpu/fesetround.c
@@ -223,7 +235,9 @@ EXPORT int my_fesetround(x64emu_t* emu, int round)
 
         return 0;
     } else {
-        return fesetround(TO_NATIVE(round));
+        int ret = fesetround(TO_NATIVE(round));
+        round_to_emu(emu);
+        return ret;
     }
 }
 
