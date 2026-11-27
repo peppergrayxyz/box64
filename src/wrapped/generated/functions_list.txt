@@ -1402,6 +1402,7 @@
 #() iFbUpp
 #() iFbpiU
 #() IFEpIi
+#() IFEppi
 #() IFIIIu
 #() IFIUUu
 #() IFUIUI
@@ -1496,6 +1497,7 @@
 #() uFpppp
 #() uFSuup
 #() uFbipp
+#() UFEppi
 #() UFppii
 #() UFppip
 #() UFppuu
@@ -1519,6 +1521,7 @@
 #() lFEipL
 #() lFEipV
 #() lFEpip
+#() lFEppi
 #() lFEppL
 #() lFEppS
 #() lFiiLu
@@ -1549,6 +1552,7 @@
 #() lFpppl
 #() lFpppL
 #() lFpppp
+#() LFEppi
 #() LFEppL
 #() LFEppp
 #() LFipLL
@@ -5909,14 +5913,30 @@ wrappedlibc:
   - vfscanf
   - vfwprintf
   - vfwscanf
+- IFppi:
+  - strtoimax
+  - strtoll
+  - wcstoimax
+  - wcstoll
+- UFppi:
+  - strtoull
+  - strtoumax
+  - wcstoull
+  - wcstoumax
 - lFipL:
   - write
 - lFipV:
   - __wprintf_chk
+- lFppi:
+  - strtol
+  - wcstol
 - lFppL:
   - readlink
 - lFppS:
   - getline
+- LFppi:
+  - strtoul
+  - wcstoul
 - LFppL:
   - strlcat
   - strlcpy

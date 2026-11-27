@@ -2110,7 +2110,7 @@ GO(__strtof_internal, fFppi)
 GO(__strtof_l, fFppp)
 GOW(strtof_l, fFppp)
 //GO(__strtof_nan, 
-GO(strtoimax, IFppi)
+GOM(strtoimax, IFEppi)
 GO2(__isoc23_strtoimax, IFppi, strtoimax)
 GO2(__isoc23_strtoll_l, IFppip, strtoll_l)
 GO2(__isoc23_strtoull_l, UFppip, strtoull_l)
@@ -2122,7 +2122,7 @@ GO(strtok, pFpp)
 GO(__strtok_r, pFppp)
 GOW(strtok_r, pFppp)
 //GO(__strtok_r_1c, 
-GO(strtol, lFppi)
+GOM(strtol, lFEppi)
 GOD(strtold, DFpp, strtod)
 GOD(__strtold_internal, DFppi, __strtod_internal)
 GOD(__strtold_l, DFppp, __strtod_l)
@@ -2131,20 +2131,20 @@ GOWD(strtold_l, DFppp, strtod_l)
 GO(__strtol_internal, lFppii)
 GO(__strtol_l, lFppip)
 GO(strtol_l, lFppip)
-GOW(strtoll, IFppi)
+GOWM(strtoll, IFEppi)
 GO(__strtoll_internal, IFppii)
 GOW(__strtoll_l, IFppip)
 GOW(strtoll_l, IFppip)
 GOW(strtoq, IFppi)
-GO(strtoul, LFppi)
+GOM(strtoul, LFEppi)
 GO(__strtoul_internal, LFppii)
 //GO(__strtoul_l, 
 GO(strtoul_l, LFppip)
-GOW(strtoull, UFppi)
+GOWM(strtoull, UFEppi)
 GO(__strtoull_internal, UFppii)
 GOW(__strtoull_l, UFppip)
 GOW(strtoull_l, UFppip)
-GO(strtoumax, UFppi)
+GOM(strtoumax, UFEppi)
 GO2(__isoc23_strtoumax, UFppi, strtoumax)
 GOW(strtouq, UFppi)
 //GO(__strverscmp, 
@@ -2506,9 +2506,9 @@ GOWD(wcstof64x_l, DFppp, wcstof32x_l)
 //GO(__wcstof_internal, 
 //GO(__wcstof_l, 
 GOW(wcstof_l, fFppp)
-GO(wcstoimax, IFppi)
+GOM(wcstoimax, IFEppi)
 GO(wcstok, pFppp)
-GO(wcstol, lFppi)
+GOM(wcstol, lFEppi)
 GOD(wcstold, DFpp, wcstod)
 //GO(__wcstold_internal, 
 //GO(__wcstold_l, 
@@ -2517,7 +2517,7 @@ GOWD(wcstold_l, DFppp, wcstod_l)
 //GO(__wcstol_l, 
 GOW(wcstol_l, lFppip)
 GO2(__isoc23_wcstol_l, lFppip, wcstol_l)
-GOW(wcstoll, IFppi)
+GOWM(wcstoll, IFEppi)
 //GO(__wcstoll_internal, 
 //GOW(__wcstoll_l, 
 GOW(wcstoll_l, IFppip)
@@ -2528,16 +2528,16 @@ GO(wcstombs, LFppL)
 GO(__wcstombs_chk, LFppLL)
 #endif
 GOW(wcstoq, IFppi)
-GO(wcstoul, LFppi)
+GOM(wcstoul, LFEppi)
 //GO(__wcstoul_internal, 
 //GO(__wcstoul_l, 
 GOW(wcstoul_l, LFppip)
 GO2(__isoc23_wcstoul_l, LFppip, wcstoul_l)
-GOW(wcstoull, UFppi)
+GOWM(wcstoull, UFEppi)
 //GO(__wcstoull_internal, 
 //GOW(__wcstoull_l, 
 GOW(wcstoull_l, UFppip)
-GO(wcstoumax, UFppi)
+GOM(wcstoumax, UFEppi)
 GOW(wcstouq, UFppi)
 GOW(wcswcs, pFpp)
 GO(wcswidth, iFpL)

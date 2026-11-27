@@ -24,6 +24,7 @@ extern const char *const sys_siglist[] __asm__("__sys_siglist");
 #include <stddef.h>
 #include <string.h>
 #include <wchar.h>
+#include <inttypes.h>
 #include <dlfcn.h>
 #include <signal.h>
 #include <errno.h>
@@ -315,6 +316,31 @@ EXPORT char* my___xpg_basename(char* path)
 {
     return posix_basename(path);
 }
+
+// musl stores the string in *end for an invalid base, glibc leaves it
+#define STRTOX(N, T, C)                                         \
+EXPORT T my_##N(x64emu_t* emu, const C* s, C** end, int base)   \
+{                                                               \
+    if(box64_musl && (base<0 || base==1 || base>36)) {          \
+        if(end) *end = (C*)s;                                   \
+        errno = EINVAL;                                         \
+        return 0;                                               \
+    }                                                           \
+    return N(s, end, base);                                     \
+}
+STRTOX(strtol, long, char)
+STRTOX(strtoll, long long, char)
+STRTOX(strtoul, unsigned long, char)
+STRTOX(strtoull, unsigned long long, char)
+STRTOX(strtoimax, intmax_t, char)
+STRTOX(strtoumax, uintmax_t, char)
+STRTOX(wcstol, long, wchar_t)
+STRTOX(wcstoll, long long, wchar_t)
+STRTOX(wcstoul, unsigned long, wchar_t)
+STRTOX(wcstoull, unsigned long long, wchar_t)
+STRTOX(wcstoimax, intmax_t, wchar_t)
+STRTOX(wcstoumax, uintmax_t, wchar_t)
+#undef STRTOX
 
 // musl's LC_ALL_MASK is 0x7fffffff, glibc refuses the unknown categories
 EXPORT void* my_newlocale(int mask, const char* locale, void* base)

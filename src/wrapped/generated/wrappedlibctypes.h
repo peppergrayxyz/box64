@@ -82,10 +82,14 @@ typedef int32_t (*iFppA_t)(void*, void*, va_list);
 typedef int32_t (*iFpON_t)(void*, int32_t, ...);
 typedef int32_t (*iFSpV_t)(void*, void*, ...);
 typedef int32_t (*iFSpA_t)(void*, void*, va_list);
+typedef int64_t (*IFppi_t)(void*, void*, int32_t);
+typedef uint64_t (*UFppi_t)(void*, void*, int32_t);
 typedef intptr_t (*lFipL_t)(int32_t, void*, uintptr_t);
 typedef intptr_t (*lFipV_t)(int32_t, void*, ...);
+typedef intptr_t (*lFppi_t)(void*, void*, int32_t);
 typedef intptr_t (*lFppL_t)(void*, void*, uintptr_t);
 typedef intptr_t (*lFppS_t)(void*, void*, void*);
+typedef uintptr_t (*LFppi_t)(void*, void*, int32_t);
 typedef uintptr_t (*LFppL_t)(void*, void*, uintptr_t);
 typedef void* (*pFipp_t)(int32_t, void*, void*);
 typedef void* (*pFpip_t)(void*, int32_t, void*);
@@ -417,10 +421,22 @@ typedef double (*DFD_t)(double);
 	GO(vfscanf, iFSpA_t) \
 	GO(vfwprintf, iFSpA_t) \
 	GO(vfwscanf, iFSpA_t) \
+	GO(strtoimax, IFppi_t) \
+	GO(strtoll, IFppi_t) \
+	GO(wcstoimax, IFppi_t) \
+	GO(wcstoll, IFppi_t) \
+	GO(strtoull, UFppi_t) \
+	GO(strtoumax, UFppi_t) \
+	GO(wcstoull, UFppi_t) \
+	GO(wcstoumax, UFppi_t) \
 	GO(write, lFipL_t) \
 	GO(__wprintf_chk, lFipV_t) \
+	GO(strtol, lFppi_t) \
+	GO(wcstol, lFppi_t) \
 	GO(readlink, lFppL_t) \
 	GO(getline, lFppS_t) \
+	GO(strtoul, LFppi_t) \
+	GO(wcstoul, LFppi_t) \
 	GO(strlcat, LFppL_t) \
 	GO(strlcpy, LFppL_t) \
 	GO(__newlocale, pFipp_t) \
