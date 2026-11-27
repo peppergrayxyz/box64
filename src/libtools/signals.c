@@ -298,8 +298,11 @@ static int is_signal_deferrable(int sig)
 }
 
 #ifdef DEFER_SIGNALS_IN_MUTEX
+#ifndef ANDROID
 __thread volatile int box64_in_mutex = 0;
 __thread volatile int box64_mutex_deferred = 0;
+#define IN_MUTEX(emu)       box64_in_mutex
+#define MUTEX_DEFERRED(emu) box64_mutex_deferred
 
 void process_mutex_deferred_signals(void)
 {
@@ -307,6 +310,28 @@ void process_mutex_deferred_signals(void)
     enter_critical_section();
     leave_critical_section();
 }
+#else
+#define IN_MUTEX(emu)       (emu)->in_mutex
+#define MUTEX_DEFERRED(emu) (emu)->mutex_deferred
+
+void mutex_op_begin(void)
+{
+    x64emu_t* emu = thread_get_emu_no_create();
+    if(emu)
+        ++emu->in_mutex;
+}
+
+int mutex_op_done(int ret)
+{
+    x64emu_t* emu = thread_get_emu_no_create();
+    if(emu && emu->in_mutex>0 && !--emu->in_mutex && emu->mutex_deferred) {
+        emu->mutex_deferred = 0;
+        enter_critical_section();
+        leave_critical_section();
+    }
+    return ret;
+}
+#endif
 #endif
 
 int defer_signal(x64emu_t* emu, int signum, siginfo_t* info)
@@ -315,9 +340,9 @@ int defer_signal(x64emu_t* emu, int signum, siginfo_t* info)
         return 0;
     if (emu->critical_section <= 0) {
         #ifdef DEFER_SIGNALS_IN_MUTEX
-        if (!box64_in_mutex)
+        if (!IN_MUTEX(emu))
             return 0;
-        box64_mutex_deferred = 1;
+        MUTEX_DEFERRED(emu) = 1;
         #else
         return 0;
         #endif

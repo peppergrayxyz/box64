@@ -116,6 +116,10 @@ typedef struct x64emu_s {
     int         exit;
     int         in_restorer;    // running the guest's sa_restorer
     uintptr_t   syscall_ret;    // RIP after the syscall being run
+    #ifdef ANDROID
+    volatile int in_mutex;      // in a box64 mutex operation, see mutex_op_begin
+    volatile int mutex_deferred;
+    #endif
     forkpty_t*  forkpty_info;
     emu_flags_t flags;
     x64test_t   test;       // used for dynarec testing

@@ -265,26 +265,31 @@ typedef struct box64context_s {
 
 } box64context_t;
 
-#if !defined(USE_CUSTOM_MUTEX) && !defined(ANDROID)
+#ifndef USE_CUSTOM_MUTEX
 // a signal handler must not run inside libc's mutex code: it unlocks box64's mutexes (unlockMutex)
-// (not on Android: __thread is emulated there, and may allocate)
 #define DEFER_SIGNALS_IN_MUTEX
+#ifndef ANDROID
 extern __thread volatile int box64_in_mutex;
 extern __thread volatile int box64_mutex_deferred;
 void process_mutex_deferred_signals(void);
+static inline void mutex_op_begin(void)
+{
+    ++box64_in_mutex;
+}
 static inline int mutex_op_done(int ret)
 {
     if(!--box64_in_mutex && box64_mutex_deferred)
         process_mutex_deferred_signals();
     return ret;
 }
-#define mutex_lock(A)    (++box64_in_mutex, mutex_op_done(pthread_mutex_lock(A)))
-#define mutex_trylock(A) (++box64_in_mutex, mutex_op_done(pthread_mutex_trylock(A)))
-#define mutex_unlock(A)  (++box64_in_mutex, mutex_op_done(pthread_mutex_unlock(A)))
-#elif !defined(USE_CUSTOM_MUTEX)
-#define mutex_lock(A)    pthread_mutex_lock(A)
-#define mutex_trylock(A) pthread_mutex_trylock(A)
-#define mutex_unlock(A)  pthread_mutex_unlock(A)
+#else
+// __thread is emulated on Android, and may allocate: the count is in the emu
+void mutex_op_begin(void);
+int mutex_op_done(int ret);
+#endif
+#define mutex_lock(A)    (mutex_op_begin(), mutex_op_done(pthread_mutex_lock(A)))
+#define mutex_trylock(A) (mutex_op_begin(), mutex_op_done(pthread_mutex_trylock(A)))
+#define mutex_unlock(A)  (mutex_op_begin(), mutex_op_done(pthread_mutex_unlock(A)))
 #else
 #define mutex_lock(A)                             \
     do {                                          \
