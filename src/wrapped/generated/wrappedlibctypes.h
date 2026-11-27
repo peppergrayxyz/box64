@@ -87,6 +87,7 @@ typedef intptr_t (*lFipV_t)(int32_t, void*, ...);
 typedef intptr_t (*lFppL_t)(void*, void*, uintptr_t);
 typedef intptr_t (*lFppS_t)(void*, void*, void*);
 typedef uintptr_t (*LFppL_t)(void*, void*, uintptr_t);
+typedef void* (*pFipp_t)(int32_t, void*, void*);
 typedef void* (*pFpip_t)(void*, int32_t, void*);
 typedef void* (*pFpLL_t)(void*, uintptr_t, uintptr_t);
 typedef void* (*pFppu_t)(void*, void*, uint32_t);
@@ -422,6 +423,8 @@ typedef double (*DFD_t)(double);
 	GO(getline, lFppS_t) \
 	GO(strlcat, LFppL_t) \
 	GO(strlcpy, LFppL_t) \
+	GO(__newlocale, pFipp_t) \
+	GO(newlocale, pFipp_t) \
 	GO(fts64_open, pFpip_t) \
 	GO(fts_open, pFpip_t) \
 	GO(__getcwd_chk, pFpLL_t) \

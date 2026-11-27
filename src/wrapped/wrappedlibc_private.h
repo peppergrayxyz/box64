@@ -1433,8 +1433,8 @@ GOW(nanosleep, iFpp)
 GO(netname2host, iFppi)
 GO(netname2user, iFppppp)
 #endif
-GO(__newlocale, pFipp)
-GOW(newlocale, pFipp)
+GOM(__newlocale, pFipp)
+GOWM(newlocale, pFipp)
 //GO(nfsservctl, 
 GOM(nftw, iFEppii)
 GOM(nftw64, iFEppii)

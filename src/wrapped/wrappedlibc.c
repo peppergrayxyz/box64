@@ -36,6 +36,7 @@ extern const char *const sys_siglist[] __asm__("__sys_siglist");
 #include <fcntl.h>
 #include <glob.h>
 #include <ctype.h>
+#include <locale.h>
 #include <dirent.h>
 #include <search.h>
 #include <sys/types.h>
@@ -314,6 +315,17 @@ EXPORT char* my___xpg_basename(char* path)
 {
     return posix_basename(path);
 }
+
+// musl's LC_ALL_MASK is 0x7fffffff, glibc refuses the unknown categories
+EXPORT void* my_newlocale(int mask, const char* locale, void* base)
+{
+    #ifdef __GLIBC__
+    if(box64_musl)
+        mask &= LC_ALL_MASK;
+    #endif
+    return newlocale(mask, locale, base);
+}
+EXPORT void* my___newlocale(int mask, const char* locale, void* base) __attribute__((alias("my_newlocale")));
 
 EXPORT char* my_strdup(x64emu_t* emu, const char* s)
 {

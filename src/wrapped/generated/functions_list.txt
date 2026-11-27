@@ -5918,6 +5918,9 @@ wrappedlibc:
 - LFppL:
   - strlcat
   - strlcpy
+- pFipp:
+  - __newlocale
+  - newlocale
 - pFpip:
   - fts64_open
   - fts_open
