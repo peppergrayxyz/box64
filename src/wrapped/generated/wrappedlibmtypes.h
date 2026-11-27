@@ -14,6 +14,8 @@
 
 typedef int32_t (*iFv_t)(void);
 typedef int32_t (*iFi_t)(int32_t);
+typedef int32_t (*iFf_t)(float);
+typedef int32_t (*iFd_t)(double);
 typedef int32_t (*iFp_t)(void*);
 typedef int64_t (*IFf_t)(float);
 typedef int64_t (*IFd_t)(double);
@@ -40,6 +42,8 @@ typedef double (*DFDD_t)(double, double);
 	GO(feraiseexcept, iFi_t) \
 	GO(fesetround, iFi_t) \
 	GO(fetestexcept, iFi_t) \
+	GO(ilogbf, iFf_t) \
+	GO(ilogb, iFd_t) \
 	GO(fesetenv, iFp_t) \
 	GO(feupdateenv, iFp_t) \
 	GO(llrintf, IFf_t) \

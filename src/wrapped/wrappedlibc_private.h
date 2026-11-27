@@ -3068,8 +3068,13 @@ GOW(hypotf, fFff)
 // GOM(__hypotf_finite, fFff)
 // GOM(__hypot_finite, dFdd)
 GOWD(hypotl, DFDD, hypot)
+#ifdef ANDROID
 GOW(ilogb, iFd)
 GOW(ilogbf, iFf)
+#else
+GOWM(ilogb, iFd)
+GOWM(ilogbf, iFf)
+#endif
 // ilogbl   // Weak
 // __issignaling
 // __issignalingf

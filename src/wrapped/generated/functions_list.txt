@@ -5599,6 +5599,10 @@ wrappedlibc:
   - vfork
 - iFi:
   - iopl
+- iFf:
+  - ilogbf
+- iFd:
+  - ilogb
 - iFp:
   - __libc_dlclose
   - _setjmp
@@ -6276,6 +6280,10 @@ wrappedlibm:
   - feraiseexcept
   - fesetround
   - fetestexcept
+- iFf:
+  - ilogbf
+- iFd:
+  - ilogb
 - iFp:
   - fesetenv
   - feupdateenv

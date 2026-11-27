@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <complex.h>
 #include <math.h>
+#include <limits.h>
 #include <fenv.h>
 
 #include "wrappedlibs.h"
@@ -251,6 +252,20 @@ EXPORT double my_nexttoward(x64emu_t* emu, double val, double to)
 EXPORT float my_nexttowardf(x64emu_t* emu, float val, double to)
 {
     return nexttowardf(val, to);
+}
+#endif
+
+#ifndef ANDROID
+// x86's FP_ILOGB0 and FP_ILOGBNAN are both INT_MIN
+EXPORT int my_ilogb(double x)
+{
+    int r = ilogb(x);
+    return (r == FP_ILOGB0 || (r == FP_ILOGBNAN && isnan(x))) ? INT_MIN : r;
+}
+EXPORT int my_ilogbf(float x)
+{
+    int r = ilogbf(x);
+    return (r == FP_ILOGB0 || (r == FP_ILOGBNAN && isnan(x))) ? INT_MIN : r;
 }
 #endif
 

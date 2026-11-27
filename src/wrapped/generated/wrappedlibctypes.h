@@ -17,6 +17,8 @@ typedef void (*vFi_t)(int32_t);
 typedef void (*vFp_t)(void*);
 typedef int32_t (*iFv_t)(void);
 typedef int32_t (*iFi_t)(int32_t);
+typedef int32_t (*iFf_t)(float);
+typedef int32_t (*iFd_t)(double);
 typedef int32_t (*iFp_t)(void*);
 typedef uint8_t (*CFp_t)(void*);
 typedef uint32_t (*uFp_t)(void*);
@@ -166,6 +168,8 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(sched_getcpu, iFv_t) \
 	GO(vfork, iFv_t) \
 	GO(iopl, iFi_t) \
+	GO(ilogbf, iFf_t) \
+	GO(ilogb, iFd_t) \
 	GO(__libc_dlclose, iFp_t) \
 	GO(_setjmp, iFp_t) \
 	GO(at_quick_exit, iFp_t) \
