@@ -79,6 +79,7 @@ extern const char *const sys_siglist[] __asm__("__sys_siglist");
 #include "bridge.h"
 #include "callback.h"
 #include "librarian.h"
+#include "symbols.h"
 #include "librarian/library_private.h"
 #include "emu/x64emu_private.h"
 #include "box64context.h"
@@ -3295,7 +3296,88 @@ EXPORT int my_nftw(x64emu_t* emu, void* pathname, void* B, int32_t nopenfd, int3
 
 EXPORT char** my_environ = NULL;
 EXPORT char** my__environ = NULL;
-EXPORT char** my___environ = NULL;  // all aliases
+EXPORT char** my___environ = NULL;
+
+static char** env_synced = NULL;
+static char*** env_slots[6];
+static int env_nslots = 0;
+
+static void env_find_slots(void)
+{
+    if(env_nslots)
+        return;
+    env_slots[env_nslots++] = &my_environ;
+    env_slots[env_nslots++] = &my__environ;
+    env_slots[env_nslots++] = &my___environ;
+    const char* names[] = {"environ", "_environ", "__environ"};
+    for(int i=0; i<3; ++i) {
+        uintptr_t start, end;
+        if(GetSymbolStartEnd(my_context->globdata, names[i], &start, &end, -1, NULL, 1, 1))
+            env_slots[env_nslots++] = (char***)start;
+    }
+}
+
+static void env_to_native(void)
+{
+    env_find_slots();
+    char** e = env_synced;
+    for(int i=0; i<env_nslots; ++i)
+        if(*env_slots[i] != env_synced) {
+            e = *env_slots[i];
+            break;
+        }
+    environ = e;
+}
+
+static void env_to_guest(void)
+{
+    for(int i=0; i<env_nslots; ++i)
+        *env_slots[i] = environ;
+    env_synced = environ;
+}
+
+EXPORT char* my_getenv(x64emu_t* emu, const char* name)
+{
+    (void)emu;
+    env_to_native();
+    return getenv(name);
+}
+
+EXPORT int my_setenv(x64emu_t* emu, const char* name, const char* value, int overwrite)
+{
+    (void)emu;
+    env_to_native();
+    int ret = setenv(name, value, overwrite);
+    env_to_guest();
+    return ret;
+}
+
+EXPORT int my_putenv(x64emu_t* emu, char* string)
+{
+    (void)emu;
+    env_to_native();
+    int ret = putenv(string);
+    env_to_guest();
+    return ret;
+}
+
+EXPORT int my_unsetenv(x64emu_t* emu, const char* name)
+{
+    (void)emu;
+    env_to_native();
+    int ret = unsetenv(name);
+    env_to_guest();
+    return ret;
+}
+
+EXPORT int my_clearenv(x64emu_t* emu)
+{
+    (void)emu;
+    env_to_native();
+    int ret = clearenv();
+    env_to_guest();
+    return ret;
+}
 
 static char** spawn_env_with_arg0(char* const envp[], const char* name, const char* arg0, char** added)
 {
@@ -6098,7 +6180,7 @@ EXPORT char* secure_getenv(const char* name)
     /*InitCpuModel();*/         \
     ctSetup();              \
     obstackSetup();         \
-    my_environ = my__environ = my___environ = box64->envv;                      \
+    my_environ = my__environ = my___environ = env_synced = box64->envv;         \
     my___progname_full = my_program_invocation_name = box64->argv[0];           \
     my___progname = my_program_invocation_short_name =                          \
         (strrchr(box64->argv[0], '/') ? strrchr(box64->argv[0], '/') + 1 : box64->argv[0]); \

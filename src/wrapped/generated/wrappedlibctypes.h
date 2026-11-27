@@ -158,6 +158,7 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(cnd_destroy, vFp_t) \
 	GO(free, vFp_t) \
 	GO(__getpagesize, iFv_t) \
+	GO(clearenv, iFv_t) \
 	GO(fork, iFv_t) \
 	GO(getpagesize, iFv_t) \
 	GO(sched_getcpu, iFv_t) \
@@ -172,11 +173,13 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(cnd_init, iFp_t) \
 	GO(cnd_signal, iFp_t) \
 	GO(getcontext, iFp_t) \
+	GO(putenv, iFp_t) \
 	GO(register_printf_type, iFp_t) \
 	GO(setcontext, iFp_t) \
 	GO(setjmp, iFp_t) \
 	GO(stime, iFp_t) \
 	GO(uname, iFp_t) \
+	GO(unsetenv, iFp_t) \
 	GO(_ITM_RU1, CFp_t) \
 	GO(_ITM_RU4, uFp_t) \
 	GO(_ITM_RU8, UFp_t) \
@@ -197,12 +200,15 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(pvalloc, pFL_t) \
 	GO(valloc, pFL_t) \
 	GO(__deregister_frame_info, pFp_t) \
+	GO(__secure_getenv, pFp_t) \
 	GO(__strdup, pFp_t) \
 	GO(canonicalize_file_name, pFp_t) \
 	GO(fts64_read, pFp_t) \
 	GO(fts_read, pFp_t) \
+	GO(getenv, pFp_t) \
 	GO(mallinfo, pFp_t) \
 	GO(mallinfo2, pFp_t) \
+	GO(secure_getenv, pFp_t) \
 	GO(strdup, pFp_t) \
 	GO(wcsdup, pFp_t) \
 	GO(__longjmp_chk, vFpi_t) \
@@ -337,6 +343,7 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(fts_set, iFppi_t) \
 	GO(ftw, iFppi_t) \
 	GO(ftw64, iFppi_t) \
+	GO(setenv, iFppi_t) \
 	GO(__cxa_atexit, iFppp_t) \
 	GO(__cxa_thread_atexit_impl, iFppp_t) \
 	GO(__vfprintf_chk, iFppp_t) \

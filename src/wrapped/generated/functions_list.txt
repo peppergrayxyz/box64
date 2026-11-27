@@ -5592,6 +5592,7 @@ wrappedlibc:
   - free
 - iFv:
   - __getpagesize
+  - clearenv
   - fork
   - getpagesize
   - sched_getcpu
@@ -5608,11 +5609,13 @@ wrappedlibc:
   - cnd_init
   - cnd_signal
   - getcontext
+  - putenv
   - register_printf_type
   - setcontext
   - setjmp
   - stime
   - uname
+  - unsetenv
 - CFp:
   - _ITM_RU1
 - uFp:
@@ -5644,12 +5647,15 @@ wrappedlibc:
   - valloc
 - pFp:
   - __deregister_frame_info
+  - __secure_getenv
   - __strdup
   - canonicalize_file_name
   - fts64_read
   - fts_read
+  - getenv
   - mallinfo
   - mallinfo2
+  - secure_getenv
   - strdup
   - wcsdup
 - vFpi:
@@ -5827,6 +5833,7 @@ wrappedlibc:
   - fts_set
   - ftw
   - ftw64
+  - setenv
 - iFppp:
   - __cxa_atexit
   - __cxa_thread_atexit_impl
