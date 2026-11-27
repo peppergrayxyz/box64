@@ -443,6 +443,8 @@ void EXPORT x86Syscall(x64emu_t *emu)
                     #else
                     S_RAX = syscall(__NR_clone, R_EBX, R_ECX, R_EDX, R_EDI, R_ESI);    // invert R_ESI/R_EDI on Aarch64 and most other
                     #endif
+                if(S_RAX==-1)
+                    S_RAX = -errno;
             }
             break;        
         case 123:   // SYS_modify_ldt

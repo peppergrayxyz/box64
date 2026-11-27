@@ -804,6 +804,8 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                     #else
                     S_RAX = syscall(__NR_clone, R_RDI, R_RSI, R_RDX, R_R8, R_R10);    // invert R_R8/R_R10 on Aarch64 and most other
                     #endif
+                if(S_RAX==-1)
+                    S_RAX = -errno;
             }
             break;
         #ifndef __NR_fork
