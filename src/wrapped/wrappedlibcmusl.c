@@ -31,7 +31,7 @@ const char* libcmuslName = "libc.musl-x86_64.so.1";
 #define CUSTOM_INIT \
     box64_musl = 1;
 
-#define NEEDED_LIBS "libc.so.6", "libdl.so.2", "libm.so.6", "libpthread.so.0"
+#define NEEDED_LIBS "libc.so.6", "libdl.so.2", "libm.so.6", "libpthread.so.0", "libcrypt.so.1", "libresolv.so.2"
 
 // define all standard library functions
 #include "wrappedlib_init.h"
