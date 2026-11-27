@@ -71,28 +71,45 @@ cmd_run() {
     echo "$(grep -c '^PASS' "$out") passed, $(grep -c '^FAIL' "$out") failed"
 }
 
+# The tests an expected failures file lists for a guest and a host, one
+# "<guest> <host> <test>" per line: <guest> and <host> are globs on the guest's
+# libc and on the host tag (<distro>-<libc>-<toolchain>-<arch>)
+expected_failures() {
+    sed 's/#.*//' "$1" | while read -r guest host test; do
+        [ -n "$test" ] || continue
+        # shellcheck disable=SC2254 # the columns are globs
+        case $2 in $guest) ;; *) continue ;; esac
+        # shellcheck disable=SC2254
+        case $3 in $host) echo "$test" ;; esac
+    done
+}
+
+# compare <baseline> <result> [<xfail> <guest> <host>]
 cmd_compare() {
     base=$1
     res=$2
     # an empty baseline has no regressions to find
     grep -q '^PASS' "$base" || die "no test passes in the baseline $base"
+    : > "$res.xfail"
+    if [ $# -eq 5 ]; then expected_failures "$3" "$4" "$5" > "$res.xfail"; fi
+
     regressions=$(awk 'NR == FNR { if ($1 == "PASS") ok[$2] = 1; next }
                        $1 == "PASS" { delete ok[$2] }
                        END { for (t in ok) print t }' "$base" "$res" | sort)
     fixed=$(awk 'NR == FNR { if ($1 != "PASS") bad[$2] = 1; next }
                  $1 == "PASS" && ($2 in bad) { print $2 }' "$base" "$res" | sort)
+    xfail=$(echo "$regressions" | grep -xF -f "$res.xfail" || true)
+    regressions=$(echo "$regressions" | grep -vxF -f "$res.xfail" || true)
+    xpass=$(awk '$1 == "PASS" { print $2 }' "$res" | grep -xF -f "$res.xfail" | sort || true)
 
     echo "baseline: $(grep -c '^PASS' "$base") passed, $(grep -c '^FAIL' "$base") failed"
     echo "result:   $(grep -c '^PASS' "$res") passed, $(grep -c '^FAIL' "$res") failed"
-    if [ -n "$fixed" ]; then
-        echo "failing in the baseline, passing in the result:"
-        echo "$fixed" | sed 's/^/  /'
-    fi
-    if [ -n "$regressions" ]; then
-        echo "passing in the baseline, not in the result:"
-        echo "$regressions" | sed 's/^/  /'
-        exit 1
-    fi
+    list() { if [ -n "$2" ]; then echo "$1"; echo "$2" | sed 's/^/  /'; fi; }
+    list "failing in the baseline, passing in the result:" "$fixed"
+    list "expected failures (${3:-}):" "$xfail"
+    list "expected failures, but passing: remove them from ${3:-}" "$xpass"
+    list "passing in the baseline, not in the result:" "$regressions"
+    if [ -n "$regressions" ]; then exit 1; fi
     echo "no regressions"
 }
 
@@ -102,6 +119,8 @@ shift
 case $action in
     build)   [ $# -eq 1 ] || die "usage: $0 build <libc-test-dir>"; cmd_build "$@" ;;
     run)     [ $# -ge 2 ] || die "usage: $0 run <libc-test-dir> <result-file> [wrapper...]"; cmd_run "$@" ;;
-    compare) [ $# -eq 2 ] || die "usage: $0 compare <baseline-file> <result-file>"; cmd_compare "$@" ;;
+    compare) [ $# -eq 2 ] || [ $# -eq 5 ] ||
+                 die "usage: $0 compare <baseline-file> <result-file> [<xfail-file> <guest> <host>]"
+             cmd_compare "$@" ;;
     *)       die "unknown action: $action" ;;
 esac

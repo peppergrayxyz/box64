@@ -38,7 +38,9 @@ Build and test box64 in a container, locally or in CI.
   libc-test run <dir>
                 run the libc-test of <dir> (built by "libc-test build", maybe
                 for another libc) with box64, fail on tests that pass in the
-                baseline but not with box64 (LIBC_TEST_TIMEOUT: per test, 10s)
+                baseline but not with box64, unless contrib/libc-test.xfail
+                lists them (LIBC_TEST_TIMEOUT: per test, 10s; LIBC_TEST_XFAIL:
+                another list, empty for none)
 
   libc-test rev print the commit LIBC_TEST_REV is at upstream (no container)
 
@@ -343,19 +345,25 @@ cmd_libc_test_build() {
     docker_run env CC="$cc" AR="$ar" RANLIB="$ranlib" "${libc_test[@]}" build "$dir"
     info "running libc-test natively, for the baseline"
     docker_run "${libc_test[@]}" run "$dir" "$dir/baseline.txt"
+    # the guest of contrib/libc-test.xfail
+    echo "$libc" > "$repo/$dir/LIBC"
 }
 
 cmd_libc_test_run() {
     [ $# -eq 1 ] || usage
-    local dir=$1 tag=$distro-$libc-$toolchain-$arch qemu=()
+    local dir=$1 tag=$distro-$libc-$toolchain-$arch qemu=() guest xfail=()
     [ -f "$repo/$dir/baseline.txt" ] || error "no $dir/baseline.txt, run \"libc-test build\" first"
+    guest=$(cat "$repo/$dir/LIBC" 2>/dev/null) || error "no $dir/LIBC, run \"libc-test build\" again"
+    if [ -n "${LIBC_TEST_XFAIL-contrib/libc-test.xfail}" ]; then
+        xfail=("${LIBC_TEST_XFAIL-contrib/libc-test.xfail}" "$guest" "$tag")
+    fi
     if $cross; then qemu=("qemu-$arch"); fi
 
     info "running the libc-test of $dir with box64 ($build_dir)"
     docker_run env BOX64_NOBANNER=1 BOX64_LOG=0 "${libc_test[@]}" run "$dir" "$dir/box64-$tag.txt" \
         "${qemu[@]}" "/src/$build_dir/box64"
-    info "comparing with the baseline"
-    docker_run "${libc_test[@]}" compare "$dir/baseline.txt" "$dir/box64-$tag.txt" |
+    info "comparing with the baseline ($guest guest, $tag host)"
+    docker_run "${libc_test[@]}" compare "$dir/baseline.txt" "$dir/box64-$tag.txt" "${xfail[@]}" |
         tee "$repo/$dir/compare-$tag.txt"
 }
 

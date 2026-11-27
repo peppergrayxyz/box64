@@ -1,0 +1,133 @@
+# libc-test: tests that pass natively but fail with box64, see contrib/libc-test.sh
+# <guest> <host> <test>, <guest> and <host> are globs on the guest's libc
+# (glibc, musl, bionic) and on the host tag (<distro>-<libc>-<toolchain>-<arch>)
+
+# aarch64 bionic libm raises other fp exceptions than x86_64's (Intel code)
+bionic termux-* src/math/asin.exe
+bionic termux-* src/math/atan.exe
+bionic termux-* src/math/cosh.exe
+bionic termux-* src/math/exp.exe
+bionic termux-* src/math/expm1f.exe
+bionic termux-* src/math/sin.exe
+bionic termux-* src/math/sinh.exe
+bionic termux-* src/math/tan.exe
+bionic termux-* src/math/tanh.exe
+
+# the test maps all address space, box64 then has no room for itself
+bionic * src/regression/malloc-oom.exe
+bionic * src/regression/setenv-oom.exe
+*      * src/regression/pthread_create-oom.exe
+glibc  * src/regression/pthread_create-oom-static.exe
+
+# x87 long double is computed in double precision, by design (and the *l
+# functions run as their double version). [!b]*: glibc and musl, not bionic,
+# whose x86_64 long double is binary128, passed as is
+[!b]* * src/functional/strtold.exe
+[!b]* * src/functional/strtold-static.exe
+[!b]* * src/math/acosl.exe
+[!b]* * src/math/asinhl.exe
+[!b]* * src/math/asinl.exe
+[!b]* * src/math/atan2l.exe
+[!b]* * src/math/atanhl.exe
+[!b]* * src/math/atanl.exe
+[!b]* * src/math/cbrtl.exe
+[!b]* * src/math/coshl.exe
+[!b]* * src/math/cosl.exe
+[!b]* * src/math/erfcl.exe
+[!b]* * src/math/erfl.exe
+[!b]* * src/math/exp10l.exe
+[!b]* * src/math/exp2l.exe
+[!b]* * src/math/expl.exe
+[!b]* * src/math/expm1l.exe
+[!b]* * src/math/fdiml.exe
+[!b]* * src/math/fmal.exe
+[!b]* * src/math/fmodl.exe
+glibc  * src/math/fpclassify.exe
+[!b]* * src/math/hypotl.exe
+[!b]* * src/math/ilogbl.exe
+[!b]* * src/math/isless.exe
+[!b]* * src/math/lgammal.exe
+[!b]* * src/math/lgammal_r.exe
+[!b]* * src/math/log10l.exe
+[!b]* * src/math/log2l.exe
+[!b]* * src/math/logl.exe
+[!b]* * src/math/modfl.exe
+[!b]* * src/math/nextafterl.exe
+[!b]* * src/math/nexttoward.exe
+[!b]* * src/math/nexttowardf.exe
+[!b]* * src/math/nexttowardl.exe
+[!b]* * src/math/pow10l.exe
+[!b]* * src/math/powl.exe
+[!b]* * src/math/remainderl.exe
+[!b]* * src/math/remquol.exe
+[!b]* * src/math/scalblnl.exe
+[!b]* * src/math/scalbnl.exe
+[!b]* * src/math/sincosl.exe
+[!b]* * src/math/sinhl.exe
+[!b]* * src/math/sinl.exe
+[!b]* * src/math/sqrtl.exe
+[!b]* * src/math/tanhl.exe
+[!b]* * src/math/tanl.exe
+[!b]* * src/math/tgammal.exe
+[!b]* * src/regression/fpclassify-invalid-ld80.exe
+[!b]* * src/regression/fpclassify-invalid-ld80-static.exe
+
+# musl's own printf, scanf and strtod compute in x87 long double
+musl   * src/functional/snprintf-static.exe
+musl   * src/functional/sscanf-static.exe
+musl   * src/functional/strtod-static.exe
+musl   * src/functional/strtod_long-static.exe
+musl   * src/functional/strtod_simple-static.exe
+musl   * src/functional/strtof-static.exe
+musl   * src/functional/swprintf-static.exe
+musl   * src/regression/printf-1e9-oob-static.exe
+
+# musl's FE_ALL_EXCEPT has x86's denormal exception, which has no native flag
+musl   * src/math/fenv.exe
+
+# a musl guest on a glibc host runs glibc's code, which behaves differently
+musl   *-glibc-* src/functional/clocale_mbfuncs.exe
+musl   *-glibc-* src/functional/crypt.exe
+musl   *-glibc-* src/functional/fnmatch.exe
+musl   *-glibc-* src/functional/fscanf.exe
+musl   *-glibc-* src/functional/fwscanf.exe
+musl   *-glibc-* src/functional/pthread_cancel-points.exe
+musl   *-glibc-* src/functional/sscanf.exe
+musl   *-glibc-* src/functional/strftime.exe
+musl   *-glibc-* src/functional/strtol.exe
+musl   *-glibc-* src/functional/wcstol.exe
+musl   *-glibc-* src/math/j1.exe
+musl   *-glibc-* src/math/j1f.exe
+musl   *-glibc-* src/math/jn.exe
+musl   *-glibc-* src/math/jnf.exe
+musl   *-glibc-* src/math/tgammaf.exe
+musl   *-glibc-* src/math/yn.exe
+musl   *-glibc-* src/math/ynf.exe
+musl   *-glibc-* src/regression/daemon-failure.exe
+musl   *-glibc-* src/regression/dn_expand-empty.exe
+musl   *-glibc-* src/regression/dn_expand-ptr-0.exe
+musl   *-glibc-* src/regression/regex-ere-backref.exe
+musl   *-glibc-* src/regression/regex-escaped-high-byte.exe
+musl   *-glibc-* src/regression/setvbuf-unget.exe
+
+# and a glibc guest on a musl host runs musl's
+glibc  *-musl-* src/functional/strptime.exe
+glibc  *-musl-* src/math/frexpl.exe
+glibc  *-musl-* src/regression/regex-backref-oob.exe
+glibc  *-musl-* src/regression/regexec-backref.exe
+
+# static glibc guests find no glibc locale on musl hosts
+glibc  *-musl-* src/functional/mbc-static.exe
+glibc  *-musl-* src/functional/swprintf-static.exe
+
+# musl's sem_t is 4-byte aligned, glibc's sem_wait uses 64-bit atomics on it
+musl   *-glibc-* src/regression/pthread_cancel-sem_wait.exe
+
+# TLS alignment above 16 is not honoured
+[!b]*  * src/functional/tls_local_exec.exe
+
+# box64 does not make brk fail
+*      * src/regression/malloc-brk-fail.exe
+
+# fork in a signal handler, flaky on musl hosts
+*      *-musl-* src/regression/raise-race.exe

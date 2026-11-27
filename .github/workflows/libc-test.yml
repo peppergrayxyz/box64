@@ -20,6 +20,7 @@ on:
       - ".github/docker/termux.Dockerfile"
       - "contrib/ci.sh"
       - "contrib/libc-test.sh"
+      - "contrib/libc-test.xfail"
   pull_request:
     types: [assigned, opened, synchronize, reopened]
     paths:
@@ -36,6 +37,7 @@ on:
       - ".github/docker/termux.Dockerfile"
       - "contrib/ci.sh"
       - "contrib/libc-test.sh"
+      - "contrib/libc-test.xfail"
 
 defaults:
   run:
