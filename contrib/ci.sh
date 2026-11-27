@@ -12,6 +12,7 @@ Build and test box64 in a container, locally or in CI.
 
   distro libc toolchain  alpine musl gcc|llvm
                          gentoo glibc|musl gcc|llvm
+                         ubuntu glibc gcc|llvm
 
   arch                   x86_64 aarch64 riscv64 loongarch64 ppc64le
 
@@ -47,6 +48,7 @@ case $distro/$libc/$toolchain in
     gentoo/glibc/llvm) stage3=llvm ;;
     gentoo/musl/gcc)   stage3=musl ;;
     gentoo/musl/llvm)  stage3=musl-llvm ;;
+    ubuntu/glibc/gcc | ubuntu/glibc/llvm) ;;
     *) error "unsupported target: $distro $libc $toolchain" ;;
 esac
 
@@ -136,6 +138,20 @@ rebuild_argp() {
     )
     rm -r "$src"
     apk del --no-cache .argp-build
+}
+
+install_ubuntu() {
+    local packages=(ca-certificates cmake git make python3)
+    case $toolchain in
+        gcc)  packages+=(gcc libc6-dev) ;;
+        llvm) packages+=(clang lld llvm libclang-rt-dev) ;;
+    esac
+    packages+=(libcrypt-dev)
+
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends "${packages[@]}"
+    rm -rf /var/lib/apt/lists/*
 }
 
 # libc and toolchain come with the stage3 image
