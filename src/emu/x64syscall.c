@@ -702,7 +702,7 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
                 emu->quit = 1;
                 return;
         }
-        if(S_EAX==-1 && errno>0)
+        if(S_RAX==-1 && errno>0)
             S_RAX = -errno;
         if(log) snprintf(buffret, 127, "0x%x%s", R_EAX, buff2);
         if(log && !BOX64ENV(rolling_log)) printf_log_prefix(0, LOG_NONE, "=> %s\n", buffret);
