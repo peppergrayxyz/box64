@@ -252,7 +252,7 @@ FROUND(llrint, double, long)
 FROUND(llrintf, float, long)
 FROUND(nearbyint, double, double)
 FROUND(nearbyintf, float, float)
-#ifdef HAVE_LD80BITS
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
 FROUND(llrintl, long double, long long)
 #else
 FROUND2(llrintl, double, long long, llrint)

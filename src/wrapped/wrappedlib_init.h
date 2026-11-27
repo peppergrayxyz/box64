@@ -21,14 +21,14 @@
 #define DOIT(P,Q) _DOIT(P,Q)
 #include DOIT(LIBNAME,defs)
 
-// regular symbol mapped to itself or another one (depending on HAVE_LD80BITS)
-#ifdef HAVE_LD80BITS
+// regular symbol mapped to itself or another one (depending on HAVE_LD80BITS, Android's long double is binary128)
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
 #define GOD(N, W, O) GO(N, W)
 #else
 #define GOD(N, W, O) GO2(N, W, O)
 #endif
 // regular symbol mapped to itself or another one (depending on HAVE_LD80BITS), but weak
-#ifdef HAVE_LD80BITS
+#if defined(HAVE_LD80BITS) || defined(ANDROID)
 #define GOWD(N, W, O) GOW(N, W)
 #else
 #define GOWD(N, W, O) GOW2(N, W, O)
