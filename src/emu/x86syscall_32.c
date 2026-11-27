@@ -472,6 +472,12 @@ static void x86Syscall_run(x64emu_t *emu)
                     size = ALIGN(size);
                     uintptr_t sp = R_ECX;
                     clone_t* args = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+                    if(args==MAP_FAILED) {
+                        if(stack_from_context)
+                            my_context->stack_clone_used = 0;
+                        S_RAX = -ENOMEM;
+                        break;
+                    }
                     args->emu = (x64emu_t*)(((uintptr_t)(args+1)+15)&~15ULL);
                     args->stack_from_context = stack_from_context;
                     if(!stack_from_context)
@@ -481,6 +487,14 @@ static void x86Syscall_run(x64emu_t *emu)
                     CloneEmu(newemu, emu);
                     newemu->regs[_SP].q[0] = sp;  // setup new stack pointer
                     int64_t ret = clone(clone32_fn, (void*)((uintptr_t)mystack+1024*1024), R_EBX, args, R_EDX, R_ESI, R_EDI);
+                    if(ret==-1) {
+                        int e = errno;
+                        FreeX64EmuFromStack(&newemu);
+                        if(stack_from_context)
+                            my_context->stack_clone_used = 0;
+                        munmap(args, size);
+                        errno = e;
+                    }
                     S_RAX = ret;
                 }
                 else
