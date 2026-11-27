@@ -179,7 +179,7 @@ GO(copy_file_range, iEipipLu)
 // copysignf    // Weak
 // copysignl    // Weak
 GOW(creat, iEpu)
-GO(creat64, iEpu)
+GO2(creat64, iEpu, creat)
 // create_module    // Weak
 GO(ctermid, tEp)
 GOM(ctime, pErl_)   //%noE
@@ -346,7 +346,7 @@ GOW(fgetc_unlocked, iES)
 // fgetgrent
 // fgetgrent_r  // Weak
 GO(fgetpos, iESBliu_)
-GO(fgetpos64, iESp)
+GO2(fgetpos64, iESp, fgetpos)
 // fgetpwent
 // fgetpwent_r  // Weak
 GOW(fgets, pEpiS)
@@ -412,7 +412,7 @@ GOW(freelocale, vEA)
 GO(__freelocale, vEA)
 GO(fremovexattr, iEip)
 GO(freopen, SEppS)
-GO(freopen64, SEppS)
+GO2(freopen64, SEppS, freopen)
 GOW(frexp, dFdp)
 // frexpf   // Weak
 #ifdef HAVE_LD80BITS
@@ -423,7 +423,7 @@ GOW2(frexpl, KFKp, frexp)
 GOM(fscanf, iEESpV)
 GO(fseek, iESli)
 GO(fseeko, iESli)
-GO(fseeko64, iESIi)
+GO2(fseeko64, iESIi, fseeko)
 GO(__fsetlocking, iESi)
 GO(fsetpos, iEpBlii_)
 //GO(fsetpos64, iEpp)
@@ -441,11 +441,11 @@ GOWM(fstatvfs64, iEEip)
 GOW(fsync, iEi)
 GOWM(ftell, lEES)
 GO(ftello, lES)
-GO(ftello64, IES)
+GO2(ftello64, IES, ftello)
 GO(ftime, iErLWww_)
 GO(ftok, iEpi)
 GOW(ftruncate, iEil)
-GOW(ftruncate64, iEiI)
+GOW2(ftruncate64, iEiI, ftruncate)
 //GOW(ftrylockfile, iEp)
 //GOM(fts_children, pEEpi) //%%
 GO(fts_close, iEp)
@@ -589,7 +589,7 @@ GOM(getpwuid_r, iEEuppLp)
 GOW(getresgid, iEppp)
 GOW(getresuid, iEppp)
 GOM(getrlimit, iEEup)
-GO(getrlimit64, iEup)
+GO2(getrlimit64, iEup, getrlimit)
 // getrpcbyname
 // getrpcbyname_r
 // getrpcbynumber
@@ -1080,7 +1080,7 @@ GOM(localtime, pEEp)
 GOM(__localtime64, pEEp)
 GOWM(localtime_r, pEEpp)
 GO(lockf, iEiil)
-GO(lockf64, iEiiI)
+GO2(lockf64, iEiiI, lockf)
 // locs // type B
 GOM(longjmp, vEEpi)         //%%
 GOM(_longjmp, vEEpi)        //%%
@@ -1091,7 +1091,7 @@ GO(lremovexattr, iEpp)
 GOM(lsearch, pEEppbL_Lp)      //%%
 GOW(lseek, lEili)
 // __lseek  // Weak
-GOW(lseek64, IEiIi)
+GOW2(lseek64, IEiIi, lseek)
 GO(lsetxattr, iEpppLi)
 //GO(lutimes, iEpp)
 GOM(__lxstat, iEEipp)       //%%
@@ -1156,9 +1156,9 @@ GO(mkfifo, iEpu)
 //GO(mkfifoat, iEipu)
 GO(mknod, iEpuU)
 GO(mkostemp, iEpi)
-GO(mkostemp64, iEpi)
+GO2(mkostemp64, iEpi, mkostemp)
 GO(mkstemp, iEp)
-GO(mkstemp64, iEp)
+GO2(mkstemp64, iEp, mkstemp)
 //GO(mktemp, pEp)
 GO(mktime, LEbiiiiiiiiilt_)
 GO2(__mktime64, LEp, mktime)
@@ -1254,7 +1254,7 @@ GOWM(open64, iEEpON)  //%%
 GO(__open64_2, iEpO)
 //GOW(openat, iEipON)
 GO(__openat_2, iEipO)
-GOW(openat64, iEipON)
+GOW2(openat64, iEipON, openat)
 GO(__openat64_2, iEipON)
 // __open_catalog
 GOW(opendir, pEp)
@@ -1289,9 +1289,9 @@ GOW(poll, iEpLi)    // poll have an array of struct as 1st argument
 GO(__poll, iEpLi)
 GO(popen, SEpp)
 GO(posix_fadvise, iEilli)
-GO(posix_fadvise64, iEiIIi)
+GO2(posix_fadvise64, iEiIIi, posix_fadvise)
 GO(posix_fallocate, iEill)
-GO(posix_fallocate64, iEiII)
+GO2(posix_fallocate64, iEiII, posix_fallocate)
 GO(posix_madvise, iEpLi)
 GOW(posix_memalign, iEBp_LL)
 // posix_openpt // Weak
@@ -1322,7 +1322,7 @@ GO(__ppoll_chk, iEpurLL_pL)
 GOWM(prctl, iEEiLLLL)
 GOWM(__prctl_time64, iEEiLLLL)
 GOW(pread, lEipLl)
-GOW(pread64, lEipLI)
+GOW2(pread64, lEipLI, pread)
 // __pread64    // Weak
 // __pread64_chk
 //GOM(preadv64, lEEipiI)  //%% not always present
@@ -1364,7 +1364,7 @@ GO(putwchar_unlocked, uEi)
 //GO(putwc_unlocked, iEip)
 // pvalloc  // Weak
 // pwrite   // Weak
-GOW(pwrite64, lEipLI)
+GOW2(pwrite64, lEipLI, pwrite)
 // __pwrite64   // Weak
 //GOM(pwritev64, lEEipiI)  //%% not always present
 // qecvt
@@ -1399,7 +1399,7 @@ GOM(read, lEipL) //%%,noE
 // readahead    // Weak
 GO(__read_chk, lEipLL)
 GOWM(readdir, pEEp)  //%%
-GO(readdir64, pEp)  // check if alignement is correct
+GO2(readdir64, pEp, readdir)  // check if alignement is correct
 //GOM(readdir_r, iEEppp)  //%% should also be weak
 GO2(readlink, lEEppL, my_readlink) //%%
 GOM(readlinkat, iEEippL)
@@ -1463,7 +1463,7 @@ GO(rewinddir, vEp)
 // rexecoptions // type B
 GOW(rindex, pEpi)
 GOW(rmdir, iEp)
-GO(readdir64_r, iEppBp_)
+GO2(readdir64_r, iEppBp_, readdir_r)
 // rpc_createerr    // type B
 // _rpc_dtablesize
 // __rpc_thread_createerr
@@ -1520,7 +1520,7 @@ GOW(semop, iEipL)
 GOW(send, lEipLi)
 // __send   // Weak
 GO(sendfile, lEiibl_L)
-GO(sendfile64, lEiipL)
+GO2(sendfile64, lEiipL, sendfile)
 GOWM(sendmsg, lEEipi)
 GO2(__sendmsg64, lEEipi, my32_sendmsg)
 GOM(sendmmsg, iEEipuu)
@@ -1567,7 +1567,7 @@ GOW(setresgid, iEuuu)
 GOW(setresuid, iEuuu)
 GOW(setreuid, iEuu)
 GOM(setrlimit, iEEup)
-GO(setrlimit64, iEup)
+GO2(setrlimit64, iEup, setrlimit)
 // setrpcent
 // setservent
 GOW(setsid, iEv)
@@ -1884,7 +1884,7 @@ GOW(times, iEBllll_)
 DATAM(timezone, 4)
 DATAM(__timezone, 4)   // type B
 GO(tmpfile, pEv)
-GO(tmpfile64, pEv)
+GO2(tmpfile64, pEv, tmpfile)
 GO(tmpnam, pEp)
 //GO(tmpnam_r, pEp)
 GO(toascii, iEi)
@@ -1909,7 +1909,7 @@ GO(__towupper_l, uEua)
 GOW(towupper_l, uEua)
 // tr_break
 GOW(truncate, iEpu)
-GO(truncate64, iEpU)
+GO2(truncate64, iEpU, truncate)
 // tsearch  // Weak
 //GO(ttyname, pEi)
 //GOW(ttyname_r, iEipu)
@@ -2236,7 +2236,7 @@ GOM(__udivdi3, UEUU)        //%%,noE
 GOM(__divdi3, IEII)         //%%,noE
 GOM(__poll_chk, iEpuiL)     //%%,noE
 
-GO(fallocate64, iEiiII)
+GO2(fallocate64, iEiiII, fallocate)
 
 //DATAM(__libc_stack_end, 4)
 

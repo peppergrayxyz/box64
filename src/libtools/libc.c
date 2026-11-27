@@ -197,6 +197,12 @@ int scandirat(int dirfd, const char *dir, struct dirent ***res,
 }
 #endif
 
+#if !defined(HAVE_GETDENTS64) && defined(HAVE_GETDENTS)
+EXPORT ssize_t getdents64(int fd, void* dirp, size_t count)
+{
+    return getdents(fd, dirp, count);
+}
+#endif
 
 // glibc _FORTIFY_SOURCE support
 // Bionic has its own fortify functions

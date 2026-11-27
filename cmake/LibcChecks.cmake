@@ -40,6 +40,7 @@ set(PROJECT_SYMBOL_CHECKS
     getprotobyname_r                    netdb.h
     getprotobynumber_r                  netdb.h
     scandirat                           dirent.h
+    getdents                            dirent.h
 )
 
 list(LENGTH PROJECT_SYMBOL_CHECKS checks_len)
@@ -67,6 +68,7 @@ endforeach()
 include(CheckFunctionExists)
 
 set(PROJECT_FUNCTION_CHECKS
+    getdents64
 )
 
 # glibc _FORTIFY_SOURCE runtime checks

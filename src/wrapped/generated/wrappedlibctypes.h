@@ -255,6 +255,7 @@ typedef double (*DFD_t)(double);
 	GO(getrlimit, iFup_t) \
 	GO(getrlimit64, iFup_t) \
 	GO(setrlimit, iFup_t) \
+	GO(setrlimit64, iFup_t) \
 	GO(__sigsetjmp, iFpi_t) \
 	GO(backtrace, iFpi_t) \
 	GO(fegetexceptflag, iFpi_t) \

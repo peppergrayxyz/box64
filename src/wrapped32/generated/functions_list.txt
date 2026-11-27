@@ -2486,11 +2486,14 @@ wrappedlibc:
   - __close_nocancel
 - iEL:
 - iEp:
+  - mkstemp64
   - shmdt
   - sysinfo
 - iEO:
 - IEp:
   - __time64
+- IES:
+  - ftello64
 - uEp:
 - uES:
   - getwc
@@ -2513,6 +2516,7 @@ wrappedlibc:
   - __res_state
   - getpwent
   - localeconv
+  - tmpfile64
 - pFv:
   - __h_errno_location
 - pEu:
@@ -2536,6 +2540,7 @@ wrappedlibc:
   - getpwnam
   - gmtime
   - localtime
+  - readdir64
 - pFp:
   - gethostbyname
 - pES:
@@ -2554,6 +2559,8 @@ wrappedlibc:
   - _obstack_newchunk
 - vEpu:
 - vEpp:
+- iEiI:
+  - ftruncate64
 - iEip:
   - __futimens64
   - fstatvfs
@@ -2564,9 +2571,16 @@ wrappedlibc:
   - __fstat64_time64
 - iEup:
   - getrlimit
+  - getrlimit64
   - setrlimit
+  - setrlimit64
 - iEpi:
   - backtrace
+  - mkostemp64
+- iEpu:
+  - creat64
+- iEpU:
+  - truncate64
 - iEpL:
 - iEpp:
   - __gettimeofday64
@@ -2580,6 +2594,8 @@ wrappedlibc:
 - iEpV:
   - execl
   - execlp
+- iESp:
+  - fgetpos64
 - IEII:
 - UEUU:
 - KFKi:
@@ -2615,10 +2631,14 @@ wrappedlibc:
 - vEpup:
   - _ITM_addUserCommitAction
 - vEppu:
+- iEiiI:
+  - lockf64
 - iEiip:
   - __shmctl64
 - iEiiN:
   - __fcntl_time64
+- iEiII:
+  - posix_fallocate64
 - iEiLp:
   - __ioctl_time64
   - ioctl
@@ -2637,11 +2657,15 @@ wrappedlibc:
   - __isoc23_sscanf
   - swscanf
 - iEpON:
+- iESIi:
+  - fseeko64
 - iESpp:
 - iESpV:
   - __isoc23_fscanf
   - __isoc99_fscanf
   - fscanf
+- IEiIi:
+  - lseek64
 - lEipi:
   - __recvmsg64
   - __sendmsg64
@@ -2663,6 +2687,10 @@ wrappedlibc:
 - pEpLL:
 - pEppi:
   - __realpath_chk
+- SEppS:
+  - freopen64
+- iEppBp_:
+  - readdir64_r
 - IEpBp_i:
   - __isoc23_strtoll
 - UEpBp_i:
@@ -2684,7 +2712,11 @@ wrappedlibc:
 - vEpLLp:
 - vEppiV:
 - iEiiip:
+- iEiiII:
+  - fallocate64
 - iEiipV:
+- iEiIIi:
+  - posix_fadvise64
 - iEipii:
 - iEipuu:
   - sendmmsg
@@ -2697,6 +2729,8 @@ wrappedlibc:
   - utimensat
 - iEippL:
   - readlinkat
+- iEipON:
+  - openat64
 - iEuupi:
   - waitid
 - iEpipp:
@@ -2711,6 +2745,11 @@ wrappedlibc:
 - iESipV:
 - uEippu:
   - regerror
+- lEiipL:
+  - sendfile64
+- lEipLI:
+  - pread64
+  - pwrite64
 - IEpBp_ia:
   - __isoc23_strtoll_l
 - UEpBp_ia:

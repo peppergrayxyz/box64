@@ -5708,6 +5708,7 @@ wrappedlibc:
   - getrlimit
   - getrlimit64
   - setrlimit
+  - setrlimit64
 - iFpi:
   - __sigsetjmp
   - backtrace
