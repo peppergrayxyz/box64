@@ -90,6 +90,14 @@ GOM(pthread_barrier_init, iFEppu)
 GO(pthread_barrier_wait, iFp)
 GO(pthread_cancel, iFL)
 GO(pthread_clockjoin_np, iFppip)
+#ifdef ANDROID
+GOM(__pthread_cleanup_pop, vFEpi)
+GOM(__pthread_cleanup_push, vFEppp)
+#else
+// bionic's, called by its pthread_cleanup_push/pop macros
+//GOM(__pthread_cleanup_pop, vFEpi)
+//GOM(__pthread_cleanup_push, vFEppp)
+#endif
 GOM(_pthread_cleanup_pop, vFEpi)
 GOM(_pthread_cleanup_pop_restore, vFEpi)
 GOM(_pthread_cleanup_push, vFEppp)

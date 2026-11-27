@@ -52,6 +52,7 @@ typedef int32_t (*iFpppp_t)(void*, void*, void*, void*);
 	GO(pthread_mutexattr_destroy, iFp_t) \
 	GO(pthread_mutexattr_init, iFp_t) \
 	GO(pthread_setattr_default_np, iFp_t) \
+	GO(__pthread_cleanup_pop, vFpi_t) \
 	GO(_pthread_cleanup_pop, vFpi_t) \
 	GO(_pthread_cleanup_pop_restore, vFpi_t) \
 	GO(__pthread_mutexattr_settype, iFpi_t) \
@@ -104,6 +105,7 @@ typedef int32_t (*iFpppp_t)(void*, void*, void*, void*);
 	GO(pthread_mutexattr_gettype, iFpp_t) \
 	GO(pthread_once, iFpp_t) \
 	GO(pthread_setaffinity_np@GLIBC_2.3.3, iFpp_t) \
+	GO(__pthread_cleanup_push, vFppp_t) \
 	GO(_pthread_cleanup_push, vFppp_t) \
 	GO(_pthread_cleanup_push_defer, vFppp_t) \
 	GO(pthread_attr_getaffinity_np, iFpLp_t) \

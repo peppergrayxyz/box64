@@ -1027,6 +1027,20 @@ EXPORT int my_pthread_cond_clockwait(x64emu_t *emu, pthread_cond_t* cond, void* 
 	return ret;
 }
 
+#ifdef ANDROID
+EXPORT void my___pthread_cleanup_push(x64emu_t* emu, void* c, void* routine, void* arg)
+{
+	(void)emu;
+	__pthread_cleanup_push(c, findcleanup_routineFct(routine), arg);
+}
+
+EXPORT void my___pthread_cleanup_pop(x64emu_t* emu, void* c, int execute)
+{
+	(void)emu;
+	__pthread_cleanup_pop(c, execute);
+}
+#endif
+
 #ifndef ANDROID
 EXPORT void my__pthread_cleanup_push_defer(x64emu_t* emu, void* buffer, void* routine, void* arg)
 {

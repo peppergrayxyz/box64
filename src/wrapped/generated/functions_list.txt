@@ -6562,6 +6562,7 @@ wrappedlibpthread:
   - pthread_mutexattr_init
   - pthread_setattr_default_np
 - vFpi:
+  - __pthread_cleanup_pop
   - _pthread_cleanup_pop
   - _pthread_cleanup_pop_restore
 - iFpi:
@@ -6618,6 +6619,7 @@ wrappedlibpthread:
   - pthread_once
   - pthread_setaffinity_np@GLIBC_2.3.3
 - vFppp:
+  - __pthread_cleanup_push
   - _pthread_cleanup_push
   - _pthread_cleanup_push_defer
 - iFpLp:
