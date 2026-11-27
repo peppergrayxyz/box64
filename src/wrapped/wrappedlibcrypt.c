@@ -20,5 +20,7 @@
 
 const char* libcryptName = "libcrypt.so.1";
 #define LIBNAME libcrypt
+#define ALTNAME "libc.so"
+#define ALTNAME2 "libcrypt.so.2"
 
 #include "wrappedlib_init.h"
