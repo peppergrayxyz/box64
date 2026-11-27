@@ -2409,46 +2409,25 @@ EXPORT int my_statfs64(const char* path, void* buf)
 #endif
 
 #ifdef ANDROID
+// bionic has no qsort_r before API 36
 typedef int (*__compar_d_fn_t)(const void*, const void*, void*);
+static __thread __compar_d_fn_t qsort_r_compar;
+static __thread void* qsort_r_arg;
 
-static size_t qsort_r_partition(void* base, size_t size, __compar_d_fn_t compar, void* arg, size_t lo, size_t hi)
+static int qsort_r_cb(const void* a, const void* b)
 {
-    void* tmp = alloca(size);
-    void* pivot = ((char*)base) + lo * size;
-    size_t i = lo;
-    for (size_t j = lo; j <= hi; j++)
-    {
-        void* base_i = ((char*)base) + i * size;
-        void* base_j = ((char*)base) + j * size;
-        if (compar(base_j, pivot, arg) < 0)
-        {
-            memcpy(tmp, base_i, size);
-            memcpy(base_i, base_j, size);
-            memcpy(base_j, tmp, size);
-            i++;
-        }
-    }
-    void* base_i = ((char *)base) + i * size;
-    void* base_hi = ((char *)base) + hi * size;
-    memcpy(tmp, base_i, size);
-    memcpy(base_i, base_hi, size);
-    memcpy(base_hi, tmp, size);
-    return i;
-}
-
-static void qsort_r_helper(void* base, size_t size, __compar_d_fn_t compar, void* arg, ssize_t lo, ssize_t hi)
-{
-    if (lo < hi)
-    {
-        size_t p = qsort_r_partition(base, size, compar, arg, lo, hi);
-        qsort_r_helper(base, size, compar, arg, lo, p - 1);
-        qsort_r_helper(base, size, compar, arg, p + 1, hi);
-    }
+    return qsort_r_compar(a, b, qsort_r_arg);
 }
 
 static void qsort_r(void* base, size_t nmemb, size_t size, __compar_d_fn_t compar, void* arg)
 {
-    return qsort_r_helper(base, size, compar, arg, 0, nmemb - 1);
+    __compar_d_fn_t old_compar = qsort_r_compar;
+    void* old_arg = qsort_r_arg;
+    qsort_r_compar = compar;
+    qsort_r_arg = arg;
+    qsort(base, nmemb, size, qsort_r_cb);
+    qsort_r_compar = old_compar;
+    qsort_r_arg = old_arg;
 }
 #endif
 
