@@ -551,6 +551,8 @@ static void x86Syscall_run(x64emu_t *emu)
             break;
         case 192:   // mmap2
             R_EAX = to_ptrv(my32_mmap64(emu, from_ptrv(R_EBX), (unsigned long)R_ECX, R_EDX, R_ESI, R_EDI, R_EBP));
+            if(S_EAX==-1 && errno>0)
+                S_EAX = -errno;
             break;
         case 240: // futex
             {

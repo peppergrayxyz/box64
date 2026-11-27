@@ -772,6 +772,8 @@ static void x64Syscall_linux_run(x64emu_t *emu)
         #endif
         case 9: // sys_mmap
             R_RAX = (uintptr_t)my_mmap64(emu, (void*)R_RDI, R_RSI, S_EDX, S_R10d, S_R8d, R_R9);
+            if(S_RAX==-1)
+                S_RAX = -errno;
             break;
         case 10: // sys_mprotect
             S_RAX = my_mprotect(emu, (void*)R_RDI, R_RSI, S_EDX);
@@ -837,6 +839,8 @@ static void x64Syscall_linux_run(x64emu_t *emu)
         #endif
         case 25: // sys_mremap
             R_RAX = (uintptr_t)my_mremap(emu, (void*)R_RDI, R_RSI, R_RDX, R_R10d, (void*)R_R8);
+            if(S_RAX==-1)
+                S_RAX = -errno;
             break;
         case 28: // sys_madvise
             S_RAX = my_madvise(emu, (void*)R_RDI, R_RSI, S_EDX);
