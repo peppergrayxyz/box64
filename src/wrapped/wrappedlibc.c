@@ -5587,22 +5587,20 @@ EXPORT void my___cxa_pure_virtual(x64emu_t* emu)
 
 EXPORT size_t my_strlcpy(x64emu_t* emu, void* dst, void* src, size_t l)
 {
+    size_t n = strlen(src);
     if (l > 0) {
-        strncpy(dst, src, l-1);
-        ((char*)dst)[l-1] = '\0';
+        size_t c = (n < l-1) ? n : l-1;
+        memcpy(dst, src, c);
+        ((char*)dst)[c] = '\0';
     }
-    return strlen(src);
+    return n;
 }
 EXPORT size_t my_strlcat(x64emu_t* emu, void* dst, void* src, size_t l)
 {
-    if (l == 0)
-        return strlen(src);
-    size_t s = strlen(dst);
-    if(s>=l)
-        return s + strlen(src);
-    strncat(dst, src, l-s-1);
-    ((char*)dst)[l-1] = '\0';
-    return s+strlen(src);
+    size_t s = strnlen(dst, l);
+    if(s==l)
+        return l + strlen(src);
+    return s + my_strlcpy(emu, (char*)dst+s, src, l-s);
 }
 
 EXPORT int my_register_printf_specifier(x64emu_t* emu, int c, void* f1, void* f2)
