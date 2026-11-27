@@ -221,6 +221,7 @@ typedef struct box64context_s {
 
     void*               tlsdata;    // the initial global tlsdata
     int64_t             tlssize;    // wanted size of tlsdata
+    size_t              tlsalign;   // largest TLS alignment
     base_segment_t      seggdt[16];
 
     uintptr_t           *auxval_start;
@@ -295,7 +296,7 @@ int AddElfHeader(box64context_t* ctx, elfheader_t* head);
 void RemoveElfHeader(box64context_t* ctx, elfheader_t* head);
 
 // return the tlsbase (negative) for the new TLS partition created (no partition index is stored in the context)
-int AddTLSPartition(box64context_t* context, int tlssize);
+int AddTLSPartition(box64context_t* context, int tlssize, size_t align);
 
 // defined in fact in threads.c
 void thread_set_emu(x64emu_t* emu);

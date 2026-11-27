@@ -304,7 +304,7 @@ int AllocLoadElfMemory(box64context_t* context, elfheader_t* head, int mainbin)
     unlockMmapMutex();
 
     head->multiblocks = (multiblock_t*)box_calloc(head->multiblock_n, sizeof(multiblock_t));
-    head->tlsbase = AddTLSPartition(context, head->tlssize);
+    head->tlsbase = AddTLSPartition(context, head->tlssize, head->tlsalign);
     // and now, create all individual blocks
     head->memory = (char*)0xffffffffffffffff;
     int n = 0;

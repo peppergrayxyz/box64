@@ -471,14 +471,20 @@ void RemoveElfHeader(box64context_t* ctx, elfheader_t* head) {
     mutex_unlock(&ctx->mutex_tls);
 }
 
-int AddTLSPartition(box64context_t* context, int tlssize) {
+int AddTLSPartition(box64context_t* context, int tlssize, size_t align) {
     mutex_lock(&context->mutex_tls);
     int oldsize = context->tlssize;
+    if(align<1 || (align&(align-1)))
+        align = 1;
     // should in fact first try to map a hole, but rewinding all elfs and checking filled space, like with the mapmem utilities
-    context->tlssize += tlssize;
+    // the block's offset from the thread pointer must be aligned
+    context->tlssize = (oldsize+tlssize+align-1)&~(align-1);
+    int added = context->tlssize - oldsize;
+    if(align>context->tlsalign)
+        context->tlsalign = align;
     context->tlsdata = box_realloc(context->tlsdata, context->tlssize);
-    memmove(context->tlsdata+tlssize, context->tlsdata, oldsize);   // move to the top, using memmove as regions will probably overlap
-    memset(context->tlsdata, 0, tlssize);           // fill new space with 0 (not mandatory)
+    memmove(context->tlsdata+added, context->tlsdata, oldsize);   // move to the top, using memmove as regions will probably overlap
+    memset(context->tlsdata, 0, added);           // fill new space with 0 (not mandatory)
     int ret = -context->tlssize;    // negative offset
     mutex_unlock(&context->mutex_tls);
     // clean GS segment for current emu?
