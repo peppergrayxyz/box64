@@ -1048,9 +1048,28 @@ EXPORT void my__pthread_cleanup_push_defer(x64emu_t* emu, void* buffer, void* ro
 	real_pthread_cleanup_push_defer(buffer, findcleanup_routineFct(routine), arg);
 }
 
+#ifdef __GLIBC__
+// musl's struct __ptcb {f, x, next} is smaller than glibc's buffer: glibc gets its own,
+// kept in next
+typedef struct musl_ptcb_s {
+	void*	f;
+	void*	x;
+	void*	next;
+} musl_ptcb_t;
+#endif
+
 EXPORT void my__pthread_cleanup_push(x64emu_t* emu, void* buffer, void* routine, void* arg)
 {
     (void)emu;
+	#ifdef __GLIBC__
+	if(box64_musl) {
+		musl_ptcb_t* cb = buffer;
+		cb->f = routine;
+		cb->x = arg;
+		cb->next = box_malloc(sizeof(struct _pthread_cleanup_buffer));
+		buffer = cb->next;
+	}
+	#endif
 	_pthread_cleanup_push(buffer, findcleanup_routineFct(routine), arg);
 }
 
@@ -1063,6 +1082,14 @@ EXPORT void my__pthread_cleanup_pop_restore(x64emu_t* emu, void* buffer, int exe
 EXPORT void my__pthread_cleanup_pop(x64emu_t* emu, void* buffer, int exec)
 {
     (void)emu;
+	#ifdef __GLIBC__
+	if(box64_musl) {
+		void* b = ((musl_ptcb_t*)buffer)->next;
+		_pthread_cleanup_pop(b, exec);
+		box_free(b);
+		return;
+	}
+	#endif
 	_pthread_cleanup_pop(buffer, exec);
 }
 
