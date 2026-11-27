@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <fcntl.h>
+#include <sched.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -669,3 +670,17 @@ EXPORT int __openat64_2(int fd, const char* path, int flags)
 #endif
 
 #endif // ANDROID
+
+#ifndef HAVE___SCHED_CPUALLOC
+EXPORT cpu_set_t* __sched_cpualloc(size_t count)
+{
+    return malloc(CPU_ALLOC_SIZE(count));
+}
+#endif
+
+#ifndef HAVE___SCHED_CPUFREE
+EXPORT void __sched_cpufree(cpu_set_t* set)
+{
+    free(set);
+}
+#endif

@@ -69,6 +69,8 @@ include(CheckFunctionExists)
 
 set(PROJECT_FUNCTION_CHECKS
     getdents64
+    __sched_cpualloc
+    __sched_cpufree
 )
 
 # glibc _FORTIFY_SOURCE runtime checks
