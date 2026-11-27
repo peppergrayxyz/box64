@@ -113,7 +113,7 @@ static void readCpuinfo(sysinfo_t* info)
 
 lscpu:
     if (!info->read_cpuname || !info->read_ncpu || !info->read_frequency) {
-        FILE* f = popen("lscpu", "r");
+        FILE* f = popen("lscpu 2>/dev/null", "r");
         if (!f) goto fallback;
         while (fgets(line, sizeof(line), f)) {
             if (!info->read_ncpu && strstr(line, "CPU(s):") != NULL) {
