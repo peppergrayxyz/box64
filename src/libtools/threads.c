@@ -767,13 +767,22 @@ EXPORT int my_pthread_create(x64emu_t *emu, void* t, void* attr, void* start_rou
 		own = 0;
 	} else {
 		stack = InternalMmap(NULL, stacksize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_GROWSDOWN, -1, 0);
-		if(stack!=MAP_FAILED)
-			setProtection_stack((uintptr_t)stack, stacksize, PROT_READ|PROT_WRITE);
+		if(stack==MAP_FAILED)
+			return EAGAIN;
+		setProtection_stack((uintptr_t)stack, stacksize, PROT_READ|PROT_WRITE);
 		own = 1;
 	}
 
 	emuthread_t *et = (emuthread_t*)box_calloc(1, sizeof(emuthread_t));
-    x64emu_t *emuthread = NewX64Emu(my_context, (uintptr_t)start_routine, (uintptr_t)stack, stacksize, own);
+    x64emu_t *emuthread = et?NewX64Emu(my_context, (uintptr_t)start_routine, (uintptr_t)stack, stacksize, own):NULL;
+	if(!emuthread) {
+		box_free(et);
+		if(own) {
+			munmap(stack, stacksize);
+			freeProtection((uintptr_t)stack, stacksize);
+		}
+		return EAGAIN;
+	}
 	SetupX64Emu(emuthread, emu);
 	//SetFS(emuthread, GetFS(emu));
 	et->emu = emuthread;
@@ -799,6 +808,11 @@ EXPORT int my_pthread_create(x64emu_t *emu, void* t, void* attr, void* start_rou
 	int ret = pthread_create((pthread_t*)t, PTHREAD_ATTR(attr),
 		pthread_routine, et);
 	// no need too unalign for attr, it's const
+	if(ret) {
+		FreeX64Emu(&emuthread);
+		box_free(et);
+		return ret;
+	}
 	// publish the guest pthread_t before the new thread runs guest code
 	__atomic_store_n(&et->pthread_t_ready, 1, __ATOMIC_RELEASE);
 	return ret;

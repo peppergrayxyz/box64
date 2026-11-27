@@ -111,6 +111,8 @@ x64emu_t *NewX64Emu(box64context_t *context, uintptr_t start, uintptr_t stack, i
     printf_log(LOG_DEBUG, "Allocate a new X86_64 Emu, with %cIP=%p and Stack=%p/0x%X%s\n", box64_is32bits?'E':'R', (void*)start, (void*)stack, stacksize, ownstack?" owned":"");
 
     x64emu_t *emu = (x64emu_t*)actual_calloc(1, sizeof(x64emu_t));
+    if(!emu)
+        return NULL;
 
     internalX64Setup(emu, context, start, stack, stacksize, ownstack);
 
