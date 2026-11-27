@@ -234,9 +234,9 @@ void EmuRun(x64emu_t* emu, int use_dynarec, int no_alt)
             #endif
             emu->flags.jmpbuf_ready = 1;
             #ifdef ANDROID
-            if ((skip = SigSetJmp(*(JUMPBUFF*)emu->jmpbuf, 1)))
+            if ((skip = SigSetJmp(*(JUMPBUFF*)emu->jmpbuf, 0)))
             #else
-            if ((skip = SigSetJmp(emu->jmpbuf, 1)))
+            if ((skip = SigSetJmp(emu->jmpbuf, 0)))
             #endif
             {
                 dynarec_log(LOG_DEBUG, "Setjmp EmuRun, fs=0x%x will %sskip dynarec next\n", emu->segs[_FS], (skip==3)?"not ":"");
