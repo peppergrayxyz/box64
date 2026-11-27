@@ -3309,7 +3309,7 @@ void* find47bitBlockNearHint(void* hint, size_t size, uintptr_t mask)
     if(!mask) mask = 0xffff;
     int found;
     LOCK_PROT_READ();
-    found = rb_find_free_range(mapallmem, cur, 0x800000000000LL, size, mask, &cur);
+    found = rb_find_free_range(mapallmem, cur, 0x7ffffffff000LL, size, mask, &cur);
     UNLOCK_PROT_READ();
     if(found)
         return (void*)cur;
@@ -3685,7 +3685,7 @@ void getLockAddressRange(uintptr_t start, size_t size, uintptr_t addrs[])
 #endif
 
 #ifndef NOALIGN
-#define BOX64_MMAP47_LIMIT (1ULL << 47)
+#define BOX64_MMAP47_LIMIT ((1ULL << 47) - 0x1000)    // x86_64's TASK_SIZE_MAX
 
 static int fits47Bits(void* addr, size_t length)
 {
