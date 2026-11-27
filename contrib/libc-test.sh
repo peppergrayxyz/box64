@@ -72,15 +72,16 @@ cmd_run() {
 }
 
 # The tests an expected failures file lists for a guest and a host, one
-# "<guest> <host> <test>" per line: <guest> and <host> are globs on the guest's
-# libc and on the host tag (<distro>-<libc>-<toolchain>-<arch>)
+# "<guest> <host> <test> [flaky]" per line: <guest> and <host> are globs on the
+# guest's libc and on the host tag (<distro>-<libc>-<toolchain>-<arch>), a flaky
+# test is not reported when it passes
 expected_failures() {
-    sed 's/#.*//' "$1" | while read -r guest host test; do
+    sed 's/#.*//' "$1" | while read -r guest host test flag; do
         [ -n "$test" ] || continue
         # shellcheck disable=SC2254 # the columns are globs
         case $2 in $guest) ;; *) continue ;; esac
         # shellcheck disable=SC2254
-        case $3 in $host) echo "$test" ;; esac
+        case $3 in $host) echo "$test${flag:+ $flag}" ;; esac
     done
 }
 
@@ -92,6 +93,8 @@ cmd_compare() {
     grep -q '^PASS' "$base" || die "no test passes in the baseline $base"
     : > "$res.xfail"
     if [ $# -eq 5 ]; then expected_failures "$3" "$4" "$5" > "$res.xfail"; fi
+    flaky=$(awk '$2 == "flaky" { print $1 }' "$res.xfail")
+    sed -i 's/ .*//' "$res.xfail"
 
     regressions=$(awk 'NR == FNR { if ($1 == "PASS") ok[$2] = 1; next }
                        $1 == "PASS" { delete ok[$2] }
@@ -101,6 +104,7 @@ cmd_compare() {
     xfail=$(echo "$regressions" | grep -xF -f "$res.xfail" || true)
     regressions=$(echo "$regressions" | grep -vxF -f "$res.xfail" || true)
     xpass=$(awk '$1 == "PASS" { print $2 }' "$res" | grep -xF -f "$res.xfail" | sort || true)
+    if [ -n "$flaky" ]; then xpass=$(echo "$xpass" | grep -vxF "$flaky" || true); fi
 
     echo "baseline: $(grep -c '^PASS' "$base") passed, $(grep -c '^FAIL' "$base") failed"
     echo "result:   $(grep -c '^PASS' "$res") passed, $(grep -c '^FAIL' "$res") failed"

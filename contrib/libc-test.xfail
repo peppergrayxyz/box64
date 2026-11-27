@@ -1,6 +1,7 @@
 # libc-test: tests that pass natively but fail with box64, see contrib/libc-test.sh
-# <guest> <host> <test>, <guest> and <host> are globs on the guest's libc
-# (glibc, musl, bionic) and on the host tag (<distro>-<libc>-<toolchain>-<arch>)
+# <guest> <host> <test> [flaky], <guest> and <host> are globs on the guest's libc
+# (glibc, musl, bionic) and on the host tag (<distro>-<libc>-<toolchain>-<arch>),
+# a flaky test is not reported when it passes
 
 # aarch64 bionic libm raises other fp exceptions than x86_64's (Intel code)
 bionic termux-* src/math/asin.exe
@@ -112,4 +113,4 @@ glibc  *-musl-* src/functional/swprintf-static.exe
 *      * src/regression/malloc-brk-fail.exe
 
 # fork in a signal handler, flaky on musl hosts
-*      *-musl-* src/regression/raise-race.exe
+*      *-musl-* src/regression/raise-race.exe flaky
