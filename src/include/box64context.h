@@ -265,7 +265,23 @@ typedef struct box64context_s {
 
 } box64context_t;
 
-#ifndef USE_CUSTOM_MUTEX
+#if !defined(USE_CUSTOM_MUTEX) && !defined(ANDROID)
+// a signal handler must not run inside libc's mutex code: it unlocks box64's mutexes (unlockMutex)
+// (not on Android: __thread is emulated there, and may allocate)
+#define DEFER_SIGNALS_IN_MUTEX
+extern __thread volatile int box64_in_mutex;
+extern __thread volatile int box64_mutex_deferred;
+void process_mutex_deferred_signals(void);
+static inline int mutex_op_done(int ret)
+{
+    if(!--box64_in_mutex && box64_mutex_deferred)
+        process_mutex_deferred_signals();
+    return ret;
+}
+#define mutex_lock(A)    (++box64_in_mutex, mutex_op_done(pthread_mutex_lock(A)))
+#define mutex_trylock(A) (++box64_in_mutex, mutex_op_done(pthread_mutex_trylock(A)))
+#define mutex_unlock(A)  (++box64_in_mutex, mutex_op_done(pthread_mutex_unlock(A)))
+#elif !defined(USE_CUSTOM_MUTEX)
 #define mutex_lock(A)    pthread_mutex_lock(A)
 #define mutex_trylock(A) pthread_mutex_trylock(A)
 #define mutex_unlock(A)  pthread_mutex_unlock(A)

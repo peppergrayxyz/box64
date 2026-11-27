@@ -297,10 +297,31 @@ static int is_signal_deferrable(int sig)
     return 1;
 }
 
+#ifdef DEFER_SIGNALS_IN_MUTEX
+__thread volatile int box64_in_mutex = 0;
+__thread volatile int box64_mutex_deferred = 0;
+
+void process_mutex_deferred_signals(void)
+{
+    box64_mutex_deferred = 0;
+    enter_critical_section();
+    leave_critical_section();
+}
+#endif
+
 int defer_signal(x64emu_t* emu, int signum, siginfo_t* info)
 {
-    if (!emu || signum < 0 || signum > MAX_SIGNAL || !is_signal_deferrable(signum) || emu->critical_section <= 0)
+    if (!emu || signum < 0 || signum > MAX_SIGNAL || !is_signal_deferrable(signum))
         return 0;
+    if (emu->critical_section <= 0) {
+        #ifdef DEFER_SIGNALS_IN_MUTEX
+        if (!box64_in_mutex)
+            return 0;
+        box64_mutex_deferred = 1;
+        #else
+        return 0;
+        #endif
+    }
 
     if (info)
         emu->deferred_siginfo[signum] = *info;
