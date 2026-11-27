@@ -157,6 +157,11 @@ GOWD(fabsl, DFD, fabs)
 GOW(fdim, dFdd)
 GOW(fdimf, fFff)
 GOWD(fdiml, DFDD, fdim)
+#ifdef ANDROID
+DATA(__fe_dfl_env, 8)
+#else
+//DATA(__fe_dfl_env, 8)
+#endif
 GOM(feclearexcept, iFEi)
 GO(fedisableexcept, iFi)
 GO(feenableexcept, iFi)
