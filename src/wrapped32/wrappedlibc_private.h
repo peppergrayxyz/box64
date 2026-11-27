@@ -1909,7 +1909,7 @@ GO(__towupper_l, uEua)
 GOW(towupper_l, uEua)
 // tr_break
 GOW(truncate, iEpu)
-GO(truncate64, iESU)
+GO(truncate64, iEpU)
 // tsearch  // Weak
 //GO(ttyname, pEi)
 //GOW(ttyname_r, iEipu)
