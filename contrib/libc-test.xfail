@@ -13,12 +13,6 @@ bionic termux-* src/math/sinh.exe
 bionic termux-* src/math/tan.exe
 bionic termux-* src/math/tanh.exe
 
-# the test maps all address space, box64 then has no room for itself
-bionic * src/regression/malloc-oom.exe
-bionic * src/regression/setenv-oom.exe
-*      * src/regression/pthread_create-oom.exe
-glibc  * src/regression/pthread_create-oom-static.exe
-
 # x87 long double is computed in double precision, by design (and the *l
 # functions run as their double version). [!b]*: glibc and musl, not bionic,
 # whose x86_64 long double is binary128, passed as is
@@ -82,9 +76,6 @@ musl   * src/functional/strtof-static.exe
 musl   * src/functional/swprintf-static.exe
 musl   * src/regression/printf-1e9-oob-static.exe
 
-# musl's FE_ALL_EXCEPT has x86's denormal exception, which has no native flag
-musl   * src/math/fenv.exe
-
 # a musl guest on a glibc host runs glibc's code, which behaves differently
 musl   *-glibc-* src/functional/clocale_mbfuncs.exe
 musl   *-glibc-* src/functional/crypt.exe
@@ -93,8 +84,6 @@ musl   *-glibc-* src/functional/fscanf.exe
 musl   *-glibc-* src/functional/fwscanf.exe
 musl   *-glibc-* src/functional/sscanf.exe
 musl   *-glibc-* src/functional/strftime.exe
-musl   *-glibc-* src/functional/strtol.exe
-musl   *-glibc-* src/functional/wcstol.exe
 musl   *-glibc-* src/math/j1.exe
 musl   *-glibc-* src/math/j1f.exe
 musl   *-glibc-* src/math/jn.exe
@@ -118,9 +107,6 @@ glibc  *-musl-* src/regression/regexec-backref.exe
 # static glibc guests find no glibc locale on musl hosts
 glibc  *-musl-* src/functional/mbc-static.exe
 glibc  *-musl-* src/functional/swprintf-static.exe
-
-# TLS alignment above 16 is not honoured
-[!b]*  * src/functional/tls_local_exec.exe
 
 # a dynamic guest's malloc is the host's, which still has memory
 *      * src/regression/malloc-brk-fail.exe
