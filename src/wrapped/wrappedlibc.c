@@ -1938,6 +1938,14 @@ EXPORT int my___isoc99_fscanf(x64emu_t* emu, void* stream, void* fmt, uint64_t* 
 }
 EXPORT int my_fscanf(x64emu_t* emu, void* stream, void* fmt, uint64_t* b) __attribute__((alias("my___isoc99_fscanf")));
 
+EXPORT int my_fwscanf(x64emu_t* emu, void* F, void* fmt, uint64_t* b)
+{
+    myStackAlignScanfW(emu, (const char*)fmt, b, emu->scratch, 2);
+    PREPARE_VALIST;
+
+    return vfwscanf(F, fmt, VARARGS);
+}
+
 EXPORT int my___isoc99_scanf(x64emu_t* emu, void* fmt, uint64_t* b)
 {
   myStackAlignScanf(emu, (const char*)fmt, b, emu->scratch, 1);

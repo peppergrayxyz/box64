@@ -5879,10 +5879,15 @@ wrappedlibc:
   - open64
 - iFSpV:
   - __isoc23_fscanf
+  - __isoc23_fwscanf
+  - __isoc99_fwscanf
   - fprintf
   - fscanf
   - fwprintf
+  - fwscanf
 - iFSpA:
+  - __isoc23_vfwscanf
+  - __isoc99_vfwscanf
   - vfprintf
   - vfscanf
   - vfwprintf

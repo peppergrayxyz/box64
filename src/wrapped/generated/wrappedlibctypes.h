@@ -382,9 +382,14 @@ typedef int32_t (*iFppipppp_t)(void*, void*, int32_t, void*, void*, void*, void*
 	GO(open, iFpON_t) \
 	GO(open64, iFpON_t) \
 	GO(__isoc23_fscanf, iFSpV_t) \
+	GO(__isoc23_fwscanf, iFSpV_t) \
+	GO(__isoc99_fwscanf, iFSpV_t) \
 	GO(fprintf, iFSpV_t) \
 	GO(fscanf, iFSpV_t) \
 	GO(fwprintf, iFSpV_t) \
+	GO(fwscanf, iFSpV_t) \
+	GO(__isoc23_vfwscanf, iFSpA_t) \
+	GO(__isoc99_vfwscanf, iFSpA_t) \
 	GO(vfprintf, iFSpA_t) \
 	GO(vfscanf, iFSpA_t) \
 	GO(vfwprintf, iFSpA_t) \
