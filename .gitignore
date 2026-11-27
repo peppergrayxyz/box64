@@ -54,6 +54,7 @@ dkms.conf
 # Box64
 build/
 build*/
+libc-test*/
 .vscode
 .cache
 .gdb_history

@@ -1,0 +1,180 @@
+name: libc test suite
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "**/*.c"
+      - "**/*.h"
+      - "**/*.S"
+      - "**/*.py"
+      - "**/*.cmake"
+      - "CMakeLists.txt"
+      - "**/*.def"
+      - ".github/workflows/libc-test.yml"
+      - ".github/docker/alpine.Dockerfile"
+      - ".github/docker/ubuntu.Dockerfile"
+      - "contrib/ci.sh"
+      - "contrib/libc-test.sh"
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
+    paths:
+      - "**/*.c"
+      - "**/*.h"
+      - "**/*.S"
+      - "**/*.py"
+      - "**/*.cmake"
+      - "CMakeLists.txt"
+      - "**/*.def"
+      - ".github/workflows/libc-test.yml"
+      - ".github/docker/alpine.Dockerfile"
+      - ".github/docker/ubuntu.Dockerfile"
+      - "contrib/ci.sh"
+      - "contrib/libc-test.sh"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  guest:
+    name: ${{ matrix.libc }}-${{ matrix.toolchain }} guest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { distro: ubuntu, libc: glibc, toolchain: gcc }
+          - { distro: alpine, libc: musl, toolchain: llvm }
+
+    runs-on: ubuntu-latest
+    env:
+      CI_SH: contrib/ci.sh ${{ matrix.distro }} x86_64 ${{ matrix.libc }} ${{ matrix.toolchain }}
+      LIBC_TEST_DIR: libc-test-${{ matrix.libc }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # the build step checks out this commit too (ci.sh reads LIBC_TEST_REV)
+      - name: "Look up libc-test master"
+        run: |
+          rev=$($CI_SH libc-test rev)
+          echo "libc-test master: $rev"
+          echo "LIBC_TEST_REV=$rev" >> "$GITHUB_ENV"
+
+      - name: "Restore libc-test"
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: libc-test-${{ matrix.libc }}.tar.gz
+          key: libc-test-${{ env.LIBC_TEST_REV }}-${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-x86_64-${{ hashFiles('contrib/ci.sh', 'contrib/libc-test.sh', format('.github/docker/{0}.Dockerfile', matrix.distro)) }}
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: "Build ${{ matrix.distro }} image"
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: contrib
+          file: .github/docker/${{ matrix.distro }}.Dockerfile
+          build-args: |
+            ARCH=x86_64
+            LIBC=${{ matrix.libc }}
+            TOOLCHAIN=${{ matrix.toolchain }}
+          pull: true
+          load: true
+          tags: box64-${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}:x86_64
+          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-x86_64
+          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-x86_64
+
+      - name: "Build libc-test and run it natively"
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          $CI_SH libc-test build
+          tar czf "$LIBC_TEST_DIR.tar.gz" "$LIBC_TEST_DIR"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libc-test-guest-${{ matrix.libc }}
+          path: libc-test-${{ matrix.libc }}.tar.gz
+          retention-days: 7
+
+  host:
+    name: ${{ matrix.libc }}-${{ matrix.toolchain }} host
+    needs: guest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { distro: ubuntu, libc: glibc, toolchain: gcc }
+          - { distro: alpine, libc: musl, toolchain: llvm }
+
+    runs-on: ubuntu-24.04-arm
+    env:
+      CI_SH: contrib/ci.sh ${{ matrix.distro }} aarch64 ${{ matrix.libc }} ${{ matrix.toolchain }}
+      BUILD_DIR: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # same image and cache as the ctest workflows of that distro
+      - name: "Build ${{ matrix.distro }} image"
+        uses: docker/build-push-action@v6
+        with:
+          context: contrib
+          file: .github/docker/${{ matrix.distro }}.Dockerfile
+          build-args: |
+            ARCH=aarch64
+            LIBC=${{ matrix.libc }}
+            TOOLCHAIN=${{ matrix.toolchain }}
+          pull: true
+          load: true
+          tags: box64-${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}:aarch64
+          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-aarch64
+          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.libc }}-${{ matrix.toolchain }}-aarch64
+
+      - name: "Build Box64"
+        id: build
+        run: $CI_SH build
+
+      # not libc-test-*: that would match the other host's results
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: libc-test-guest-*
+          merge-multiple: true
+
+      - name: "Unpack libc-test"
+        run: for t in libc-test-*.tar.gz; do tar xzf "$t"; done
+
+      # the musl guest also runs when the glibc guest has regressions
+      - name: "Run libc-test with Box64 (glibc guest)"
+        run: $CI_SH libc-test run libc-test-glibc
+
+      - name: "Run libc-test with Box64 (musl guest)"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: $CI_SH libc-test run libc-test-musl
+
+      - name: "Summary"
+        if: always()
+        run: |
+          for guest in glibc musl; do
+            echo "### ${{ matrix.libc }}-${{ matrix.toolchain }} host, $guest guest"
+            echo "libc-test $(cat libc-test-$guest/REVISION || echo "(unknown revision)")"
+            echo '```'
+            cat libc-test-$guest/compare-*.txt || echo "no comparison"
+            echo '```'
+          done >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Upload results"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: libc-test-results-${{ matrix.libc }}-${{ matrix.toolchain }}-host
+          path: |
+            libc-test-*/baseline.txt*
+            libc-test-*/box64-*.txt*
+            libc-test-*/compare-*.txt
+          if-no-files-found: ignore

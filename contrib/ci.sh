@@ -28,10 +28,25 @@ Build and test box64 in a container, locally or in CI.
 
   run <cmd>     run a command in the container
 
+  libc-test build
+                fetch and build musl's libc-test in LIBC_TEST_DIR (default:
+                libc-test-<distro>-<libc>-<toolchain>), then run it natively
+                for the baseline. LIBC_TEST_REV: the libc-test commit to fetch
+                (default: master), an existing LIBC_TEST_DIR is reused
+
+  libc-test run <dir>
+                run the libc-test of <dir> (built by "libc-test build", maybe
+                for another libc) with box64, fail on tests that pass in the
+                baseline but not with box64 (LIBC_TEST_TIMEOUT: per test, 10s)
+
+  libc-test rev print the commit LIBC_TEST_REV is at upstream (no container)
+
   install       install the image's packages (used by the dockerfiles)
 
 e.g.  $0 alpine riscv64 musl llvm image
       BOX32=ON $0 alpine riscv64 musl llvm build
+      $0 gentoo x86_64 glibc gcc libc-test build
+      $0 alpine aarch64 musl gcc libc-test run libc-test-gentoo-glibc-gcc
 EOF
     exit 2
 }
@@ -75,6 +90,7 @@ repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 image=box64-$distro-$libc-$toolchain:$arch
 build_dir=${BUILD_DIR:-build-$distro-$libc-$toolchain-$arch}
 box32=${BOX32:-OFF}
+libc_test_dir=${LIBC_TEST_DIR:-libc-test-$distro-$libc-$toolchain}
 
 # --- install, run by the Dockerfiles ----------------------------------------
 
@@ -280,12 +296,81 @@ cmd_bash() {
     [ "$out" = "$expected" ] || error "bash smoke test: expected $(printf '%q' "$expected")"
 }
 
+# --- libc-test --------------------------------------------------------------
+
+libc_test_repo=https://repo.or.cz/libc-test.git
+# a commit, branch or tag; CI pins a commit
+libc_test_rev=${LIBC_TEST_REV:-master}
+
+libc_test=(env "LIBC_TEST_TIMEOUT=${LIBC_TEST_TIMEOUT:-}" sh contrib/libc-test.sh)
+
+cmd_libc_test_build() {
+    local dir=$libc_test_dir cc=${toolchain/llvm/clang} ar=ar ranlib=ranlib
+    if [ "$arch" != x86_64 ] || $cross; then
+        error "libc-test build: the tests are x86_64 binaries, run natively for the baseline"
+    fi
+    if [ "$toolchain" = llvm ]; then
+        cc+=" -fuse-ld=lld -rtlib=compiler-rt"
+        # no binutils in the llvm images, and alpine has no llvm-ranlib in PATH
+        ar=llvm-ar ranlib="llvm-ar s"
+    fi
+
+    if [ ! -d "$repo/$dir" ]; then
+        info "fetching libc-test $libc_test_rev into $dir"
+        # REVISION: the commit the tests are built from
+        # shellcheck disable=SC2016
+        docker_run sh -euc 'git clone -q "$1" "$3" && git -C "$3" checkout -q "$2" &&
+                            git -C "$3" rev-parse HEAD > "$3/REVISION"' \
+            sh "$libc_test_repo" "$libc_test_rev" "$dir"
+    fi
+    info "building libc-test $(cat "$repo/$dir/REVISION" 2>/dev/null || echo "(unknown revision)") in $dir"
+    docker_run env CC="$cc" AR="$ar" RANLIB="$ranlib" "${libc_test[@]}" build "$dir"
+    info "running libc-test natively, for the baseline"
+    docker_run "${libc_test[@]}" run "$dir" "$dir/baseline.txt"
+}
+
+cmd_libc_test_run() {
+    [ $# -eq 1 ] || usage
+    local dir=$1 tag=$distro-$libc-$toolchain-$arch qemu=()
+    [ -f "$repo/$dir/baseline.txt" ] || error "no $dir/baseline.txt, run \"libc-test build\" first"
+    if $cross; then qemu=("qemu-$arch"); fi
+
+    info "running the libc-test of $dir with box64 ($build_dir)"
+    docker_run env BOX64_NOBANNER=1 BOX64_LOG=0 "${libc_test[@]}" run "$dir" "$dir/box64-$tag.txt" \
+        "${qemu[@]}" "/src/$build_dir/box64"
+    info "comparing with the baseline"
+    docker_run "${libc_test[@]}" compare "$dir/baseline.txt" "$dir/box64-$tag.txt" |
+        tee "$repo/$dir/compare-$tag.txt"
+}
+
+# runs on the host: CI uses the commit as cache key, before any image is built
+cmd_libc_test_rev() {
+    if [[ $libc_test_rev =~ ^[0-9a-f]{40}$ ]]; then
+        echo "$libc_test_rev"
+        return
+    fi
+    local rev
+    rev=$(git ls-remote "$libc_test_repo" "$libc_test_rev" | awk 'NR == 1 { print $1 }')
+    [ -n "$rev" ] || error "libc-test: no branch or tag $libc_test_rev in $libc_test_repo"
+    echo "$rev"
+}
+
+cmd_libc_test() {
+    case ${1:-} in
+        build) cmd_libc_test_build ;;
+        run)   shift; cmd_libc_test_run "$@" ;;
+        rev)   cmd_libc_test_rev ;;
+        *)     usage ;;
+    esac
+}
+
 case $command in
-    install) cmd_install ;;
-    image)   cmd_image ;;
-    build)   cmd_build ;;
-    test)    cmd_test "$@" ;;
-    bash)    cmd_bash "$@" ;;
-    run)     docker_run "$@" ;;
-    *)       usage ;;
+    install)   cmd_install ;;
+    image)     cmd_image ;;
+    build)     cmd_build ;;
+    test)      cmd_test "$@" ;;
+    bash)      cmd_bash "$@" ;;
+    run)       docker_run "$@" ;;
+    libc-test) cmd_libc_test "$@" ;;
+    *)         usage ;;
 esac
