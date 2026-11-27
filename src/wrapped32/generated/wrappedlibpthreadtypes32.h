@@ -75,6 +75,7 @@ typedef int32_t (*iEpppp_t)(void*, void*, void*, void*);
 	GO(pthread_attr_setschedpolicy, iEpi_t) \
 	GO(pthread_attr_setscope, iEpi_t) \
 	GO(pthread_mutexattr_setkind_np, iEpi_t) \
+	GO(pthread_mutexattr_setrobust_np, iEpi_t) \
 	GO(pthread_attr_setguardsize, iEpL_t) \
 	GO(pthread_attr_setstacksize, iEpL_t) \
 	GO(__pthread_key_create, iEpp_t) \
@@ -97,6 +98,7 @@ typedef int32_t (*iEpppp_t)(void*, void*, void*, void*);
 	GO(pthread_cond_wait@GLIBC_2.0, iEpp_t) \
 	GO(pthread_key_create, iEpp_t) \
 	GO(pthread_mutex_init, iEpp_t) \
+	GO(pthread_mutexattr_getrobust_np, iEpp_t) \
 	GO(pthread_once, iEpp_t) \
 	GO(pthread_rwlock_init, iEpp_t) \
 	GO(sem_getvalue, iEpp_t) \

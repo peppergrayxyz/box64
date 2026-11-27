@@ -835,6 +835,7 @@ void pFXpp_32(x64emu_t *emu, uintptr_t fnc);
 void pFnpL_32(x64emu_t *emu, uintptr_t fnc);
 void aEipa_32(x64emu_t *emu, uintptr_t fnc);
 void SEEpp_32(x64emu_t *emu, uintptr_t fnc);
+void SEpLp_32(x64emu_t *emu, uintptr_t fnc);
 void SEppS_32(x64emu_t *emu, uintptr_t fnc);
 void tEipu_32(x64emu_t *emu, uintptr_t fnc);
 void tEipL_32(x64emu_t *emu, uintptr_t fnc);
@@ -2278,22 +2279,30 @@ void vFXpuiiiiipuiiiiiiii_32(x64emu_t *emu, uintptr_t fnc);
 void uFippuuuuiiiiuuiiiiiiiipp_32(x64emu_t *emu, uintptr_t fnc);
 
 #if defined(HAVE_LD80BITS)
+void iED_32(x64emu_t *emu, uintptr_t fnc);
+void IED_32(x64emu_t *emu, uintptr_t fnc);
 void DED_32(x64emu_t *emu, uintptr_t fnc);
 void DFDi_32(x64emu_t *emu, uintptr_t fnc);
 void DEDi_32(x64emu_t *emu, uintptr_t fnc);
 void DEDD_32(x64emu_t *emu, uintptr_t fnc);
 void DFDp_32(x64emu_t *emu, uintptr_t fnc);
 void DEDp_32(x64emu_t *emu, uintptr_t fnc);
+void DEDDD_32(x64emu_t *emu, uintptr_t fnc);
+void DEDDp_32(x64emu_t *emu, uintptr_t fnc);
 void DEpBp_a_32(x64emu_t *emu, uintptr_t fnc);
 #endif
 
 #if !defined(HAVE_LD80BITS)
+void iEK_32(x64emu_t *emu, uintptr_t fnc);
+void IEK_32(x64emu_t *emu, uintptr_t fnc);
 void KEK_32(x64emu_t *emu, uintptr_t fnc);
 void KFKi_32(x64emu_t *emu, uintptr_t fnc);
 void KEKi_32(x64emu_t *emu, uintptr_t fnc);
 void KEKK_32(x64emu_t *emu, uintptr_t fnc);
 void KFKp_32(x64emu_t *emu, uintptr_t fnc);
 void KEKp_32(x64emu_t *emu, uintptr_t fnc);
+void KEKKK_32(x64emu_t *emu, uintptr_t fnc);
+void KEKKp_32(x64emu_t *emu, uintptr_t fnc);
 void KEpBp_a_32(x64emu_t *emu, uintptr_t fnc);
 #endif
 

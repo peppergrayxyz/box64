@@ -97,14 +97,16 @@ GO(pthread_mutexattr_destroy, iEp)
 GO(pthread_mutexattr_getprioceiling, iEpp)
 GO(pthread_mutexattr_getprotocol, iEpp)
 // pthread_mutexattr_getpshared
-// pthread_mutexattr_getrobust_np
+GO(pthread_mutexattr_getrobust, iEpp)
+GO2(pthread_mutexattr_getrobust_np, iEpp, pthread_mutexattr_getrobust)
 GO(pthread_mutexattr_gettype, iEpp)
 GO2(__pthread_mutexattr_init, iEp, my32_pthread_mutexattr_init)
 GOM(pthread_mutexattr_init, iEEp)
 GO(pthread_mutexattr_setprioceiling, iEpi)
 GO(pthread_mutexattr_setprotocol, iEpp)
 GO(pthread_mutexattr_setpshared, iEpi)
-// pthread_mutexattr_setrobust_np
+GO(pthread_mutexattr_setrobust, iEpi)
+GO2(pthread_mutexattr_setrobust_np, iEpi, pthread_mutexattr_setrobust)
 GO(__pthread_mutexattr_settype, iEpi)
 GO(pthread_mutexattr_settype, iEpi)
 // pthread_mutex_consistent_np

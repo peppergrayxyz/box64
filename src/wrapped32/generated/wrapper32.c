@@ -888,6 +888,7 @@ typedef void* (*pFXpp_t)(void*, void*, void*);
 typedef void* (*pFnpL_t)(void*, void*, uintptr_t);
 typedef void* (*aEipa_t)(int32_t, void*, void*);
 typedef void* (*SEEpp_t)(x64emu_t*, void*, void*);
+typedef void* (*SEpLp_t)(void*, uintptr_t, void*);
 typedef void* (*SEppS_t)(void*, void*, void*);
 typedef char* (*tEipu_t)(int32_t, void*, uint32_t);
 typedef char* (*tEipL_t)(int32_t, void*, uintptr_t);
@@ -2331,22 +2332,30 @@ typedef void (*vFXpuiiiiipuiiiiiiii_t)(void*, void*, uint32_t, int32_t, int32_t,
 typedef uint32_t (*uFippuuuuiiiiuuiiiiiiiipp_t)(int32_t, void*, void*, uint32_t, uint32_t, uint32_t, uint32_t, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, void*, void*);
 
 #if defined(HAVE_LD80BITS)
+typedef int32_t (*iED_t)(long double);
+typedef int64_t (*IED_t)(long double);
 typedef long double (*DED_t)(long double);
 typedef long double (*DFDi_t)(long double, int32_t);
 typedef long double (*DEDi_t)(long double, int32_t);
 typedef long double (*DEDD_t)(long double, long double);
 typedef long double (*DFDp_t)(long double, void*);
 typedef long double (*DEDp_t)(long double, void*);
+typedef long double (*DEDDD_t)(long double, long double, long double);
+typedef long double (*DEDDp_t)(long double, long double, void*);
 typedef long double (*DEpBp_a_t)(void*, struct_p_t*, void*);
 #endif
 
 #if !defined(HAVE_LD80BITS)
+typedef int32_t (*iEK_t)(double);
+typedef int64_t (*IEK_t)(double);
 typedef double (*KEK_t)(double);
 typedef double (*KFKi_t)(double, int32_t);
 typedef double (*KEKi_t)(double, int32_t);
 typedef double (*KEKK_t)(double, double);
 typedef double (*KFKp_t)(double, void*);
 typedef double (*KEKp_t)(double, void*);
+typedef double (*KEKKK_t)(double, double, double);
+typedef double (*KEKKp_t)(double, double, void*);
 typedef double (*KEpBp_a_t)(void*, struct_p_t*, void*);
 #endif
 
@@ -3153,6 +3162,7 @@ void pFXpp_32(x64emu_t *emu, uintptr_t fcn) { pFXpp_t fn = (pFXpp_t)fcn; R_EAX =
 void pFnpL_32(x64emu_t *emu, uintptr_t fcn) { pFnpL_t fn = (pFnpL_t)fcn; void *aligned_xcb = align_xcb_connection32(from_ptriv(R_ESP + 4)); R_EAX = to_ptrv(fn(aligned_xcb, from_ptriv(R_ESP + 8), from_ulong(from_ptri(ulong_t, R_ESP + 12)))); unalign_xcb_connection32(aligned_xcb, from_ptriv(R_ESP + 4)); }
 void aEipa_32(x64emu_t *emu, uintptr_t fcn) { aEipa_t fn = (aEipa_t)fcn; errno = emu->libc_err; R_EAX = to_locale(fn(from_ptri(int32_t, R_ESP + 4), from_ptriv(R_ESP + 8), from_locale(from_ptri(ptr_t, R_ESP + 12)))); emu->libc_err = errno; }
 void SEEpp_32(x64emu_t *emu, uintptr_t fcn) { SEEpp_t fn = (SEEpp_t)fcn; errno = emu->libc_err; R_EAX = to_ptrv(io_convert_from(fn(emu, from_ptriv(R_ESP + 4), from_ptriv(R_ESP + 8)))); emu->libc_err = errno; }
+void SEpLp_32(x64emu_t *emu, uintptr_t fcn) { SEpLp_t fn = (SEpLp_t)fcn; errno = emu->libc_err; R_EAX = to_ptrv(io_convert_from(fn(from_ptriv(R_ESP + 4), from_ulong(from_ptri(ulong_t, R_ESP + 8)), from_ptriv(R_ESP + 12)))); emu->libc_err = errno; }
 void SEppS_32(x64emu_t *emu, uintptr_t fcn) { SEppS_t fn = (SEppS_t)fcn; errno = emu->libc_err; R_EAX = to_ptrv(io_convert_from(fn(from_ptriv(R_ESP + 4), from_ptriv(R_ESP + 8), io_convert32(from_ptriv(R_ESP + 12))))); emu->libc_err = errno; }
 void tEipu_32(x64emu_t *emu, uintptr_t fcn) { tEipu_t fn = (tEipu_t)fcn; errno = emu->libc_err; R_EAX = to_cstring(fn(from_ptri(int32_t, R_ESP + 4), from_ptriv(R_ESP + 8), from_ptri(uint32_t, R_ESP + 12))); emu->libc_err = errno; }
 void tEipL_32(x64emu_t *emu, uintptr_t fcn) { tEipL_t fn = (tEipL_t)fcn; errno = emu->libc_err; R_EAX = to_cstring(fn(from_ptri(int32_t, R_ESP + 4), from_ptriv(R_ESP + 8), from_ulong(from_ptri(ulong_t, R_ESP + 12)))); emu->libc_err = errno; }
@@ -4596,22 +4606,30 @@ void vFXpuiiiiipuiiiiiiii_32(x64emu_t *emu, uintptr_t fcn) { vFXpuiiiiipuiiiiiii
 void uFippuuuuiiiiuuiiiiiiiipp_32(x64emu_t *emu, uintptr_t fcn) { uFippuuuuiiiiuuiiiiiiiipp_t fn = (uFippuuuuiiiiuuiiiiiiiipp_t)fcn; R_EAX = (uint32_t)fn(from_ptri(int32_t, R_ESP + 4), from_ptriv(R_ESP + 8), from_ptriv(R_ESP + 12), from_ptri(uint32_t, R_ESP + 16), from_ptri(uint32_t, R_ESP + 20), from_ptri(uint32_t, R_ESP + 24), from_ptri(uint32_t, R_ESP + 28), from_ptri(int32_t, R_ESP + 32), from_ptri(int32_t, R_ESP + 36), from_ptri(int32_t, R_ESP + 40), from_ptri(int32_t, R_ESP + 44), from_ptri(uint32_t, R_ESP + 48), from_ptri(uint32_t, R_ESP + 52), from_ptri(int32_t, R_ESP + 56), from_ptri(int32_t, R_ESP + 60), from_ptri(int32_t, R_ESP + 64), from_ptri(int32_t, R_ESP + 68), from_ptri(int32_t, R_ESP + 72), from_ptri(int32_t, R_ESP + 76), from_ptri(int32_t, R_ESP + 80), from_ptri(int32_t, R_ESP + 84), from_ptriv(R_ESP + 88), from_ptriv(R_ESP + 92)); }
 
 #if defined(HAVE_LD80BITS)
+void iED_32(x64emu_t *emu, uintptr_t fcn) { iED_t fn = (iED_t)fcn; errno = emu->libc_err; R_EAX = fn(LD2localLD(from_ptrv(R_ESP + 4))); emu->libc_err = errno; }
+void IED_32(x64emu_t *emu, uintptr_t fcn) { IED_t fn = (IED_t)fcn; errno = emu->libc_err; ui64_t r; r.i = fn(LD2localLD(from_ptrv(R_ESP + 4))); R_EAX = r.d[0]; R_EDX = r.d[1]; emu->libc_err = errno; }
 void DED_32(x64emu_t *emu, uintptr_t fcn) { DED_t fn = (DED_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4))); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
 void DFDi_32(x64emu_t *emu, uintptr_t fcn) { DFDi_t fn = (DFDi_t)fcn; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), from_ptri(int32_t, R_ESP + 16)); fpu_do_push(emu); ST0val = ld; }
 void DEDi_32(x64emu_t *emu, uintptr_t fcn) { DEDi_t fn = (DEDi_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), from_ptri(int32_t, R_ESP + 16)); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
 void DEDD_32(x64emu_t *emu, uintptr_t fcn) { DEDD_t fn = (DEDD_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), LD2localLD(from_ptrv(R_ESP + 16))); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
 void DFDp_32(x64emu_t *emu, uintptr_t fcn) { DFDp_t fn = (DFDp_t)fcn; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), from_ptriv(R_ESP + 16)); fpu_do_push(emu); ST0val = ld; }
 void DEDp_32(x64emu_t *emu, uintptr_t fcn) { DEDp_t fn = (DEDp_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), from_ptriv(R_ESP + 16)); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
+void DEDDD_32(x64emu_t *emu, uintptr_t fcn) { DEDDD_t fn = (DEDDD_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), LD2localLD(from_ptrv(R_ESP + 16)), LD2localLD(from_ptrv(R_ESP + 28))); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
+void DEDDp_32(x64emu_t *emu, uintptr_t fcn) { DEDDp_t fn = (DEDDp_t)fcn; errno = emu->libc_err; long double ld = fn(LD2localLD(from_ptrv(R_ESP + 4)), LD2localLD(from_ptrv(R_ESP + 16)), from_ptriv(R_ESP + 28)); fpu_do_push(emu); ST0val = ld; emu->libc_err = errno; }
 void DEpBp_a_32(x64emu_t *emu, uintptr_t fcn) { DEpBp_a_t fn = (DEpBp_a_t)fcn; errno = emu->libc_err; struct_p_t arg_8={0}; long double ld = fn(from_ptriv(R_ESP + 4), *(ptr_t*)(from_ptr((R_ESP + 8))) ? &arg_8 : NULL, from_locale(from_ptri(ptr_t, R_ESP + 12))); fpu_do_push(emu); ST0val = ld; if (*(ptr_t*)(from_ptr((R_ESP + 8)))) to_struct_p(*(ptr_t*)(from_ptr((R_ESP + 8))), &arg_8); emu->libc_err = errno; }
 #endif
 
 #if !defined(HAVE_LD80BITS)
+void iEK_32(x64emu_t *emu, uintptr_t fcn) { iEK_t fn = (iEK_t)fcn; errno = emu->libc_err; R_EAX = fn(FromLD(from_ptrv(R_ESP + 4))); emu->libc_err = errno; }
+void IEK_32(x64emu_t *emu, uintptr_t fcn) { IEK_t fn = (IEK_t)fcn; errno = emu->libc_err; ui64_t r; r.i = fn(FromLD(from_ptrv(R_ESP + 4))); R_EAX = r.d[0]; R_EDX = r.d[1]; emu->libc_err = errno; }
 void KEK_32(x64emu_t *emu, uintptr_t fcn) { KEK_t fn = (KEK_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4))); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
 void KFKi_32(x64emu_t *emu, uintptr_t fcn) { KFKi_t fn = (KFKi_t)fcn; double db = fn(FromLD(from_ptrv(R_ESP + 4)), from_ptri(int32_t, R_ESP + 16)); fpu_do_push(emu); ST0val = db; }
 void KEKi_32(x64emu_t *emu, uintptr_t fcn) { KEKi_t fn = (KEKi_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4)), from_ptri(int32_t, R_ESP + 16)); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
 void KEKK_32(x64emu_t *emu, uintptr_t fcn) { KEKK_t fn = (KEKK_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4)), FromLD(from_ptrv(R_ESP + 16))); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
 void KFKp_32(x64emu_t *emu, uintptr_t fcn) { KFKp_t fn = (KFKp_t)fcn; double db = fn(FromLD(from_ptrv(R_ESP + 4)), from_ptriv(R_ESP + 16)); fpu_do_push(emu); ST0val = db; }
 void KEKp_32(x64emu_t *emu, uintptr_t fcn) { KEKp_t fn = (KEKp_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4)), from_ptriv(R_ESP + 16)); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
+void KEKKK_32(x64emu_t *emu, uintptr_t fcn) { KEKKK_t fn = (KEKKK_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4)), FromLD(from_ptrv(R_ESP + 16)), FromLD(from_ptrv(R_ESP + 28))); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
+void KEKKp_32(x64emu_t *emu, uintptr_t fcn) { KEKKp_t fn = (KEKKp_t)fcn; errno = emu->libc_err; double db = fn(FromLD(from_ptrv(R_ESP + 4)), FromLD(from_ptrv(R_ESP + 16)), from_ptriv(R_ESP + 28)); fpu_do_push(emu); ST0val = db; emu->libc_err = errno; }
 void KEpBp_a_32(x64emu_t *emu, uintptr_t fcn) { KEpBp_a_t fn = (KEpBp_a_t)fcn; errno = emu->libc_err; struct_p_t arg_8={0}; double db = fn(from_ptriv(R_ESP + 4), *(ptr_t*)(from_ptr((R_ESP + 8))) ? &arg_8 : NULL, from_locale(from_ptri(ptr_t, R_ESP + 12))); fpu_do_push(emu); ST0val = db; if (*(ptr_t*)(from_ptr((R_ESP + 8)))) to_struct_p(*(ptr_t*)(from_ptr((R_ESP + 8))), &arg_8); emu->libc_err = errno; }
 #endif
 
@@ -4672,6 +4690,8 @@ int isRetX87Wrapper32(wrapper_t fun) {
 	if (fun == &DEDD_32) return 1;
 	if (fun == &DFDp_32) return 1;
 	if (fun == &DEDp_32) return 1;
+	if (fun == &DEDDD_32) return 1;
+	if (fun == &DEDDp_32) return 1;
 	if (fun == &DEpBp_a_32) return 1;
 #endif
 #if !defined(HAVE_LD80BITS)
@@ -4681,6 +4701,8 @@ int isRetX87Wrapper32(wrapper_t fun) {
 	if (fun == &KEKK_32) return 1;
 	if (fun == &KFKp_32) return 1;
 	if (fun == &KEKp_32) return 1;
+	if (fun == &KEKKK_32) return 1;
+	if (fun == &KEKKp_32) return 1;
 	if (fun == &KEpBp_a_32) return 1;
 #endif
 	return 0;

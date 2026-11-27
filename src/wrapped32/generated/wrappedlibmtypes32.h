@@ -12,19 +12,39 @@
 #define ADDED_FUNCTIONS() 
 #endif
 
+typedef int32_t (*iEv_t)(void);
+typedef int32_t (*iEi_t)(int32_t);
+typedef int32_t (*iEK_t)(double);
+typedef int32_t (*iEp_t)(void*);
+typedef int64_t (*IEK_t)(double);
 typedef uint64_t (*UEs_t)(void*);
 typedef float (*fEf_t)(float);
 typedef double (*dEd_t)(double);
 typedef long double (*DED_t)(long double);
 typedef double (*KEK_t)(double);
+typedef int32_t (*iEpi_t)(void*, int32_t);
 typedef float (*fEff_t)(float, float);
 typedef double (*dEdd_t)(double, double);
 typedef double (*KEKi_t)(double, int32_t);
 typedef double (*KEKK_t)(double, double);
 typedef double (*KEKp_t)(double, void*);
+typedef double (*KEKKK_t)(double, double, double);
+typedef double (*KEKKp_t)(double, double, void*);
 typedef uint64_t (*UEsvvs_t)(void*, void, void, void*);
 
 #define SUPER() ADDED_FUNCTIONS() \
+	GO(fegetround, iEv_t) \
+	GO(feclearexcept, iEi_t) \
+	GO(feraiseexcept, iEi_t) \
+	GO(fesetround, iEi_t) \
+	GO(fetestexcept, iEi_t) \
+	GO(ilogbl, iEK_t) \
+	GO(lrintl, iEK_t) \
+	GO(lroundl, iEK_t) \
+	GO(fesetenv, iEp_t) \
+	GO(feupdateenv, iEp_t) \
+	GO(llrintl, IEK_t) \
+	GO(llroundl, IEK_t) \
 	GO(cacosf, UEs_t) \
 	GO(cacoshf, UEs_t) \
 	GO(casinf, UEs_t) \
@@ -69,13 +89,38 @@ typedef uint64_t (*UEsvvs_t)(void*, void, void, void*);
 	GO(asinhl, KEK_t) \
 	GO(asinl, KEK_t) \
 	GO(atanhl, KEK_t) \
+	GO(atanl, KEK_t) \
 	GO(cbrtl, KEK_t) \
+	GO(ceill, KEK_t) \
+	GO(coshl, KEK_t) \
+	GO(cosl, KEK_t) \
 	GO(erfcl, KEK_t) \
 	GO(erfl, KEK_t) \
+	GO(exp10l, KEK_t) \
+	GO(exp2l, KEK_t) \
+	GO(expl, KEK_t) \
+	GO(expm1l, KEK_t) \
+	GO(fabsl, KEK_t) \
+	GO(floorl, KEK_t) \
 	GO(lgammal, KEK_t) \
+	GO(log10l, KEK_t) \
+	GO(log1pl, KEK_t) \
+	GO(log2l, KEK_t) \
+	GO(logbl, KEK_t) \
 	GO(logl, KEK_t) \
+	GO(nearbyintl, KEK_t) \
 	GO(pow10l, KEK_t) \
+	GO(rintl, KEK_t) \
+	GO(roundl, KEK_t) \
+	GO(sinhl, KEK_t) \
+	GO(sinl, KEK_t) \
+	GO(sqrtl, KEK_t) \
+	GO(tanhl, KEK_t) \
+	GO(tanl, KEK_t) \
 	GO(tgammal, KEK_t) \
+	GO(truncl, KEK_t) \
+	GO(fegetexceptflag, iEpi_t) \
+	GO(fesetexceptflag, iEpi_t) \
 	GO(__atan2f_finite, fEff_t) \
 	GO(__hypotf_finite, fEff_t) \
 	GO(__powf_finite, fEff_t) \
@@ -83,10 +128,23 @@ typedef uint64_t (*UEsvvs_t)(void*, void, void, void*);
 	GO(__hypot_finite, dEdd_t) \
 	GO(__pow_finite, dEdd_t) \
 	GO(ldexpl, KEKi_t) \
+	GO(scalblnl, KEKi_t) \
+	GO(scalbnl, KEKi_t) \
+	GO(atan2l, KEKK_t) \
+	GO(copysignl, KEKK_t) \
+	GO(fdiml, KEKK_t) \
+	GO(fmaxl, KEKK_t) \
+	GO(fminl, KEKK_t) \
 	GO(fmodl, KEKK_t) \
+	GO(hypotl, KEKK_t) \
+	GO(nextafterl, KEKK_t) \
+	GO(nexttowardl, KEKK_t) \
 	GO(powl, KEKK_t) \
+	GO(remainderl, KEKK_t) \
 	GO(frexpl, KEKp_t) \
 	GO(lgammal_r, KEKp_t) \
+	GO(fmal, KEKKK_t) \
+	GO(remquol, KEKKp_t) \
 	GO(cpowf, UEsvvs_t)
 
 #endif // __wrappedlibmTYPES32_H_

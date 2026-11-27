@@ -151,4 +151,17 @@ F1D(log)
 #define CUSTOM_FINI     \
     my_lib = NULL;
 
+// the x86 exception bits and rounding modes are converted by the 64-bit wrappers
+int my_fesetenv(x64emu_t* emu, const void* envp);
+int my_feupdateenv(x64emu_t* emu, const void* envp);
+// FE_DFL_ENV and FE_NOMASK_ENV are (fenv_t*)-1 and -2 on i386 too
+static const void* fenv_from_32(const void* envp)
+{
+    if((uintptr_t)envp==0xffffffff) return (const void*)(intptr_t)-1;
+    if((uintptr_t)envp==0xfffffffe) return (const void*)(intptr_t)-2;
+    return envp;
+}
+EXPORT int my32_fesetenv(x64emu_t* emu, const void* envp) { return my_fesetenv(emu, fenv_from_32(envp)); }
+EXPORT int my32_feupdateenv(x64emu_t* emu, const void* envp) { return my_feupdateenv(emu, fenv_from_32(envp)); }
+
 #include "wrappedlib_init32.h"

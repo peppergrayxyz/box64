@@ -793,6 +793,7 @@
 #() pFnpL -> pFnpL
 #() aEipa -> aEipa
 #() SEEpp -> SEEpp
+#() SEpLp -> SEpLp
 #() SEppS -> SEppS
 #() tEipu -> tEipu
 #() tEipL -> tEipL
@@ -2234,19 +2235,27 @@
 #() vFuuuuiiiiuuiiiiiii -> vFuuuuiiiiuuiiiiiii
 #() vFXpuiiiiipuiiiiiiii -> vFXpuiiiiipuiiiiiiii
 #() uFippuuuuiiiiuuiiiiiiiipp -> uFippuuuuiiiiuuiiiiiiiipp
+#defined(HAVE_LD80BITS) iED -> iED
+#defined(HAVE_LD80BITS) IED -> IED
 #defined(HAVE_LD80BITS) DED -> DED
 #defined(HAVE_LD80BITS) DFDi -> DFDi
 #defined(HAVE_LD80BITS) DEDi -> DEDi
 #defined(HAVE_LD80BITS) DEDD -> DEDD
 #defined(HAVE_LD80BITS) DFDp -> DFDp
 #defined(HAVE_LD80BITS) DEDp -> DEDp
+#defined(HAVE_LD80BITS) DEDDD -> DEDDD
+#defined(HAVE_LD80BITS) DEDDp -> DEDDp
 #defined(HAVE_LD80BITS) DEpBp_a -> DEpBa
+#!defined(HAVE_LD80BITS) iEK -> iEK
+#!defined(HAVE_LD80BITS) IEK -> IEK
 #!defined(HAVE_LD80BITS) KEK -> KEK
 #!defined(HAVE_LD80BITS) KFKi -> KFKi
 #!defined(HAVE_LD80BITS) KEKi -> KEKi
 #!defined(HAVE_LD80BITS) KEKK -> KEKK
 #!defined(HAVE_LD80BITS) KFKp -> KFKp
 #!defined(HAVE_LD80BITS) KEKp -> KEKp
+#!defined(HAVE_LD80BITS) KEKKK -> KEKKK
+#!defined(HAVE_LD80BITS) KEKKp -> KEKKp
 #!defined(HAVE_LD80BITS) KEpBp_a -> KEpBa
 #defined(WINLATOR_GLIBC) pEipi -> pEipi
 #!defined(WINLATOR_GLIBC) pEEipi -> pEEipi
@@ -2986,6 +2995,23 @@ wrappedlibglxnvidia:
 - vFppupui:
   - glMultiModeDrawElementsIBM
 wrappedlibm:
+- iEv:
+  - fegetround
+- iEi:
+  - feclearexcept
+  - feraiseexcept
+  - fesetround
+  - fetestexcept
+- iEK:
+  - ilogbl
+  - lrintl
+  - lroundl
+- iEp:
+  - fesetenv
+  - feupdateenv
+- IEK:
+  - llrintl
+  - llroundl
 - UEs:
   - cacosf
   - cacoshf
@@ -3035,13 +3061,39 @@ wrappedlibm:
   - asinhl
   - asinl
   - atanhl
+  - atanl
   - cbrtl
+  - ceill
+  - coshl
+  - cosl
   - erfcl
   - erfl
+  - exp10l
+  - exp2l
+  - expl
+  - expm1l
+  - fabsl
+  - floorl
   - lgammal
+  - log10l
+  - log1pl
+  - log2l
+  - logbl
   - logl
+  - nearbyintl
   - pow10l
+  - rintl
+  - roundl
+  - sinhl
+  - sinl
+  - sqrtl
+  - tanhl
+  - tanl
   - tgammal
+  - truncl
+- iEpi:
+  - fegetexceptflag
+  - fesetexceptflag
 - fEff:
   - __atan2f_finite
   - __hypotf_finite
@@ -3052,12 +3104,27 @@ wrappedlibm:
   - __pow_finite
 - KEKi:
   - ldexpl
+  - scalblnl
+  - scalbnl
 - KEKK:
+  - atan2l
+  - copysignl
+  - fdiml
+  - fmaxl
+  - fminl
   - fmodl
+  - hypotl
+  - nextafterl
+  - nexttowardl
   - powl
+  - remainderl
 - KEKp:
   - frexpl
   - lgammal_r
+- KEKKK:
+  - fmal
+- KEKKp:
+  - remquol
 - UEsvvs:
   - cpowf
 wrappedlibogg:
@@ -3172,6 +3239,7 @@ wrappedlibpthread:
   - pthread_attr_setschedpolicy
   - pthread_attr_setscope
   - pthread_mutexattr_setkind_np
+  - pthread_mutexattr_setrobust_np
 - iEpL:
   - pthread_attr_setguardsize
   - pthread_attr_setstacksize
@@ -3196,6 +3264,7 @@ wrappedlibpthread:
   - pthread_cond_wait@GLIBC_2.0
   - pthread_key_create
   - pthread_mutex_init
+  - pthread_mutexattr_getrobust_np
   - pthread_once
   - pthread_rwlock_init
   - sem_getvalue

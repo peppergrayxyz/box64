@@ -375,7 +375,7 @@ GO(flistxattr, iEipL)
 GOW(flock, iEii)
 GOW(flockfile, vFS)
 GOW(_flushlbf, vEv)
-//GO(fmemopen, pEpup)
+GOW(fmemopen, SEpLp)
 // fmtmsg
 GO(fnmatch, iEppi)
 GO2(fopen, SEEpp, my_fopen)           //%%
