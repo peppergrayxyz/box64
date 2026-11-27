@@ -91,7 +91,6 @@ musl   *-glibc-* src/functional/crypt.exe
 musl   *-glibc-* src/functional/fnmatch.exe
 musl   *-glibc-* src/functional/fscanf.exe
 musl   *-glibc-* src/functional/fwscanf.exe
-musl   *-glibc-* src/functional/pthread_cancel-points.exe
 musl   *-glibc-* src/functional/sscanf.exe
 musl   *-glibc-* src/functional/strftime.exe
 musl   *-glibc-* src/functional/strtol.exe
@@ -120,13 +119,10 @@ glibc  *-musl-* src/regression/regexec-backref.exe
 glibc  *-musl-* src/functional/mbc-static.exe
 glibc  *-musl-* src/functional/swprintf-static.exe
 
-# musl's sem_t is 4-byte aligned, glibc's sem_wait uses 64-bit atomics on it
-musl   *-glibc-* src/regression/pthread_cancel-sem_wait.exe
-
 # TLS alignment above 16 is not honoured
 [!b]*  * src/functional/tls_local_exec.exe
 
-# box64 does not make brk fail
+# a dynamic guest's malloc is the host's, which still has memory
 *      * src/regression/malloc-brk-fail.exe
 
 # fork in a signal handler, flaky on musl hosts
