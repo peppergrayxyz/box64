@@ -257,6 +257,8 @@ typedef double (*DFD_t)(double);
 	GO(setrlimit, iFup_t) \
 	GO(__sigsetjmp, iFpi_t) \
 	GO(backtrace, iFpi_t) \
+	GO(fegetexceptflag, iFpi_t) \
+	GO(fesetexceptflag, iFpi_t) \
 	GO(mtx_init, iFpi_t) \
 	GO(sigsetjmp, iFpi_t) \
 	GO(delete_module, iFpu_t) \

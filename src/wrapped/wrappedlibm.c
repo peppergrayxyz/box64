@@ -162,6 +162,21 @@ EXPORT int my_fetestexcept(x64emu_t* emu, int e) {
     return native_to_x86_excepts(r);
 }
 
+// x86's fexcept_t is an unsigned short with the x86 exception bits
+EXPORT int my_fegetexceptflag(x64emu_t* emu, uint16_t* flagp, int e)
+{
+    *flagp = native_to_x86_excepts(fetestexcept(x86_to_native_excepts(e)));
+    return 0;
+}
+
+EXPORT int my_fesetexceptflag(x64emu_t* emu, const uint16_t* flagp, int e)
+{
+    int n = x86_to_native_excepts(e);
+    int set = x86_to_native_excepts(*flagp) & n;
+    feclearexcept(n & ~set);
+    return feraiseexcept(set);
+}
+
 // x86_64 FE_DFL_ENV = ((const fenv_t *) -1)
 // x86_64 FE_NOMASK_ENV = ((const fenv_t *) -2)
 // On some architectures (e.g. ppc64le), these are real pointers, not sentinels,

@@ -23,6 +23,7 @@ typedef float (*fFf_t)(float);
 typedef double (*dFd_t)(double);
 typedef intptr_t (*lFf_t)(float);
 typedef intptr_t (*lFd_t)(double);
+typedef int32_t (*iFpi_t)(void*, int32_t);
 typedef float (*fFff_t)(float, float);
 typedef double (*dFdd_t)(double, double);
 
@@ -89,6 +90,8 @@ typedef double (*DFDD_t)(double, double);
 	GO(lrintf, lFf_t) \
 	GO(lrint, lFd_t) \
 	GO(lrintl, lFD_t) \
+	GO(fegetexceptflag, iFpi_t) \
+	GO(fesetexceptflag, iFpi_t) \
 	GO(__atan2f_finite, fFff_t) \
 	GO(__fmodf_finite, fFff_t) \
 	GO(__hypotf_finite, fFff_t) \

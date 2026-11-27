@@ -5711,6 +5711,8 @@ wrappedlibc:
 - iFpi:
   - __sigsetjmp
   - backtrace
+  - fegetexceptflag
+  - fesetexceptflag
   - mtx_init
   - sigsetjmp
 - iFpu:
@@ -6354,6 +6356,9 @@ wrappedlibm:
   - lrint
 - lFD:
   - lrintl
+- iFpi:
+  - fegetexceptflag
+  - fesetexceptflag
 - fFff:
   - __atan2f_finite
   - __fmodf_finite
