@@ -353,6 +353,11 @@ cmd_libc_test_build() {
     fi
     info "building libc-test $(cat "$repo/$dir/REVISION" 2>/dev/null || echo "(unknown revision)") in $dir"
     docker_run env CC="$cc" AR="$ar" RANLIB="$ranlib" "${libc_test[@]}" build "$dir"
+    if [ "$libc" = glibc ]; then
+        # static glibc tests need a C.UTF-8 locale, and the host may have none (libc-test.sh sets LOCPATH)
+        # shellcheck disable=SC2016
+        docker_run sh -c 'rm -rf "$1/locale" && mkdir -p "$1/locale" && cp -r /usr/lib/locale/C.utf8 "$1/locale/"' sh "$dir"
+    fi
     info "running libc-test natively, for the baseline"
     docker_run "${libc_test[@]}" run "$dir" "$dir/baseline.txt"
     # the guest of contrib/libc-test.xfail

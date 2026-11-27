@@ -44,6 +44,8 @@ cmd_run() {
     shift 2
     timeout=${LIBC_TEST_TIMEOUT:-10}
     cd "$dir"
+    # a glibc guest's own C.UTF-8 (see ci.sh)
+    if [ -d locale ]; then LOCPATH=$PWD/locale; export LOCPATH; fi
 
     : > "$out"
     : > "$out.log"

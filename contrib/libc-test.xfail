@@ -105,10 +105,6 @@ glibc  *-musl-* src/math/frexpl.exe
 glibc  *-musl-* src/regression/regex-backref-oob.exe
 glibc  *-musl-* src/regression/regexec-backref.exe
 
-# static glibc guests find no glibc locale on musl hosts
-glibc  *-musl-* src/functional/mbc-static.exe
-glibc  *-musl-* src/functional/swprintf-static.exe
-
 # a dynamic guest's malloc is the host's, which still has memory
 *      * src/regression/malloc-brk-fail.exe
 
