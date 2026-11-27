@@ -873,6 +873,7 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
             if((R_EDI&~0xff)==0x4100) {
                 // this is a case of vfork...
                 emu->fork_stack = R_RSI;
+                emu->fork_raw = 1;
                 S_RAX = my_vfork(emu);
                 if(S_RAX==-1)
                     S_RAX = -errno;
@@ -935,6 +936,7 @@ void EXPORT x64Syscall_linux(x64emu_t *emu)
             break;
         #endif
         case 58:   // vfork
+            emu->fork_raw = 1;
             S_RAX = my_vfork(emu);
             if(S_RAX==-1)
                 S_RAX = -errno;

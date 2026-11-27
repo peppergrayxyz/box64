@@ -134,6 +134,7 @@ typedef struct x64emu_s {
     void*       init_stack; // initial stack (owned or not)
     uint32_t    size_stack; // stack size (owned or not)
     uintptr_t   fork_stack; // stack of the child of a clone(CLONE_VFORK)
+    int         fork_raw;   // the fork comes from a syscall instruction: an error is -errno
     JUMPBUFF*   jmpbuf;
     #if defined(RV64) || defined(PPC64LE)
     uintptr_t   old_savedsp;

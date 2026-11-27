@@ -76,7 +76,8 @@ x64emu_t* x64emu_fork(x64emu_t* emu, int forktype)
             R_RSP = emu->fork_stack;
     }
     emu->fork_stack = 0;
-    R_EAX = v;
+    S_RAX = (v<0 && emu->fork_raw) ? -errno : v;
+    emu->fork_raw = 0;
     return emu;
 }
 
