@@ -5216,7 +5216,7 @@ EXPORT int my_semctl(int semid, int semnum, int cmd, union semun b)
     int ret = semctl(semid, semnum, cmd, b);
     if ((cmd == IPC_STAT) || (cmd == IPC_SET) || (cmd == SEM_STAT) || (cmd == SEM_STAT_ANY)) {
         b.buf = backup;
-        if (cmd == IPC_STAT) {
+        if (ret != -1 && cmd != IPC_SET) {
             UnalignSemidDs(backup, &semidds);
         }
     }
