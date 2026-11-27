@@ -720,6 +720,12 @@ void* map128_customMalloc(size_t size, int is32bits)
         ? box_mmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_32BIT, -1, 0)
         : (box64_is32bits ? box32_dynarec_mmap(allocsize, -1, 0) : InternalMmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     if(is32bits) mutex_lock(&mutex_blocks);
+    if(p==MAP_FAILED) {
+        if(i==n_blocks-1) --n_blocks;
+        errno = ENOMEM;
+        mutex_unlock(&mutex_blocks);
+        return NULL;
+    }
     #ifdef TRACE_MEMSTAT
     customMalloc_allocated += allocsize;
     #endif
@@ -862,6 +868,12 @@ void* map64_customMalloc(size_t size, int is32bits)
         ? box_mmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_32BIT, -1, 0)
         : (box64_is32bits ? box32_dynarec_mmap(allocsize, -1, 0) : InternalMmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     if(is32bits) mutex_lock(&mutex_blocks);
+    if(p==MAP_FAILED) {
+        if(i==n_blocks-1) --n_blocks;
+        errno = ENOMEM;
+        mutex_unlock(&mutex_blocks);
+        return NULL;
+    }
 
     #ifdef TRACE_MEMSTAT
     customMalloc_allocated += allocsize;
@@ -995,6 +1007,12 @@ void* internal_customMalloc(size_t size, int is32bits)
         : (box64_is32bits ? box32_dynarec_mmap(allocsize, -1, 0) : InternalMmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     if(is32bits)
         mutex_lock(&mutex_blocks);
+    if(p==MAP_FAILED) {
+        if(i==n_blocks-1) --n_blocks;
+        errno = ENOMEM;
+        mutex_unlock(&mutex_blocks);
+        return NULL;
+    }
 #ifdef TRACE_MEMSTAT
     customMalloc_allocated += allocsize;
 #endif
@@ -1297,6 +1315,12 @@ void* internal_customMemAligned(size_t align, size_t size, int is32bits)
         : (box64_is32bits ? box32_dynarec_mmap(allocsize, -1, 0) : InternalMmap(NULL, allocsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     if(is32bits)
         mutex_lock(&mutex_blocks);
+    if(p==MAP_FAILED) {
+        if(i==n_blocks-1) --n_blocks;
+        errno = ENOMEM;
+        mutex_unlock(&mutex_blocks);
+        return NULL;
+    }
 #ifdef TRACE_MEMSTAT
     customMalloc_allocated += allocsize;
 #endif
