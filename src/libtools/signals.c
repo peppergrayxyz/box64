@@ -326,6 +326,20 @@ void enter_critical_section()
     if (emu) ++emu->critical_section;
 }
 
+// what the kernel blocks while the handler runs
+void block_handler_mask(int x64sig)
+{
+    int sig = signal_from_x64(x64sig);
+    struct sigaction sa;
+    if(sigaction(sig, NULL, &sa))
+        return;
+    uint64_t mask = 0;
+    memcpy(&mask, &sa.sa_mask, sizeof(mask));
+    if(!(sa.sa_flags & SA_NODEFER))
+        mask |= 1ULL<<(sig-1);
+    syscall(__NR_rt_sigprocmask, SIG_BLOCK, &mask, NULL, sizeof(mask));
+}
+
 void leave_critical_section()
 {
     x64emu_t* emu = thread_get_emu_no_create();
@@ -344,6 +358,15 @@ void leave_critical_section()
             emu->deferred_signal_pending[sig] = 0;
             --emu->deferred_signal_count;
             handled = 1;
+            int nsig = signal_from_x64(sig);
+            uint64_t mask = 0;
+            syscall(__NR_rt_sigprocmask, SIG_BLOCK, NULL, &mask, sizeof(mask));
+            if(mask & (1ULL<<(nsig-1))) {
+                // blocked by now: pending again, like the kernel
+                info.si_signo = nsig;
+                syscall(__NR_rt_tgsigqueueinfo, getpid(), GetTID(), nsig, &info);
+                continue;
+            }
             my_sigactionhandler_oldcode(emu, sig, 0, &info, NULL, NULL, NULL, R_RIP);
         }
         if (!handled) {
@@ -461,6 +484,7 @@ int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, sigin
             sigprocmask(SIG_SETMASK, NULL, &tmp);
             memcpy(&sigcontext->uc_sigmask, &tmp, sigmask_sz);
         }
+        block_handler_mask(sig);
     }
     // get FloatPoint status
     sigcontext->uc_mcontext.fpregs = xstate;//(struct x64_libc_fpstate*)&sigcontext->xstate;

@@ -533,6 +533,7 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
             sigprocmask(SIG_SETMASK, NULL, &tmp);
             memcpy(&sigcontext->uc_sigmask, &tmp, sigmask_sz);
         }
+        block_handler_mask(sig);
     }
     // get general register
     sigcontext->uc_mcontext.gregs[I386_EAX] = R_EAX;
